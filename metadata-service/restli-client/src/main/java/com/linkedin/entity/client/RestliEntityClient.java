@@ -850,6 +850,12 @@ public class RestliEntityClient extends BaseClient implements EntityClient {
     sendClientRequest(requestBuilder, authentication);
   }
 
+  // TODO : Implement RecordAspect Return OR Change Overall to VersionedAspect
+  @Override
+  public RecordTemplate getLatestAspect(@Nonnull String urn, @Nonnull String aspect, @Nonnull Authentication authentication) throws RemoteInvocationException {
+    return null;
+  }
+
   // TODO: Refactor QueryUtils inside of metadata-io to extract these methods into a single shared library location.
   // Creates new Filter from a map of Criteria by removing null-valued Criteria and using EQUAL condition (default).
   @Nonnull

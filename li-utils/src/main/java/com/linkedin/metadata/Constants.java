@@ -2,6 +2,9 @@ package com.linkedin.metadata;
 
 import com.linkedin.common.urn.Urn;
 
+import java.util.Arrays;
+import java.util.List;
+
 
 /**
  * Static class containing commonly-used constants across DataHub services.
@@ -363,6 +366,7 @@ public class Constants {
   // DAO
   public static final long LATEST_VERSION = 0;
 
+  public static final List<String> SKIP_REFRENCE_ASPECT = Arrays.asList("ownership", "status", "institutionalMemory");
   private Constants() {
   }
 }
