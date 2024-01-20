@@ -87,7 +87,7 @@ public class PluginEntityRegistryLoaderTest {
   private EntityRegistry getBaseEntityRegistry() {
     final AspectSpec keyAspectSpec =
         new AspectSpec(new AspectAnnotation("datasetKey", false, false, null), Collections.emptyList(),
-            Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+            Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
             (RecordDataSchema) DataSchemaFactory.getInstance().getAspectSchema("datasetKey").get(),
             DataSchemaFactory.getInstance().getAspectClass("datasetKey").get());
 

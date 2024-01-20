@@ -38,7 +38,7 @@ public class UpdateIndicesServiceFactory {
     if ("restli".equals(entityClientImpl)) {
       updateIndicesService.setSystemEntityClient(context.getBean(SystemRestliEntityClient.class));
     }
-
+    updateIndicesService.setEntityRegistry();
     return updateIndicesService;
   }
 }
