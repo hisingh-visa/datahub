@@ -39,6 +39,7 @@ public class EntityIndexBuilders implements ElasticSearchIndexed {
     @Override
     public List<ReindexConfig> buildReindexConfigs() {
         Map<String, Object> settings = settingsBuilder.getSettings();
+        MappingsBuilder.setEntityRegistry(entityRegistry);
         return entityRegistry.getEntitySpecs().values().stream().map(entitySpec -> {
                     try {
                         Map<String, Object> mappings = MappingsBuilder.getMappings(entitySpec);

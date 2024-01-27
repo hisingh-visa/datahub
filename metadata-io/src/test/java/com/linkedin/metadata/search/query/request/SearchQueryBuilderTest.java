@@ -43,6 +43,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
 
+import javax.annotation.PostConstruct;
+
 import static com.linkedin.datahub.graphql.resolvers.search.SearchUtils.AUTO_COMPLETE_ENTITY_TYPES;
 import static com.linkedin.datahub.graphql.resolvers.search.SearchUtils.SEARCHABLE_ENTITY_TYPES;
 import static com.linkedin.metadata.search.elasticsearch.indexbuilder.SettingsBuilder.TEXT_SEARCH_ANALYZER;
@@ -85,6 +87,12 @@ public class SearchQueryBuilderTest extends AbstractTestNGSpringContextTests {
     testQueryConfig.setPartial(partialConfiguration);
   }
   public static final SearchQueryBuilder TEST_BUILDER = new SearchQueryBuilder(testQueryConfig, null);
+
+  @PostConstruct
+  public void setup(){
+    TEST_BUILDER.setEntityRegistry(entityRegistry);
+    TEST_CUSTOM_BUILDER.setEntityRegistry(entityRegistry);
+  }
 
   @Test
   public void testQueryBuilderFulltext() {
@@ -319,7 +327,8 @@ public class SearchQueryBuilderTest extends AbstractTestNGSpringContextTests {
 
   @Test
   public void testGetStandardFields() {
-    Set<SearchFieldConfig> fieldConfigs = TEST_CUSTOM_BUILDER.getStandardFields(ImmutableList.of(TestEntitySpecBuilder.getSpec()));
+    Set<SearchFieldConfig> fieldConfigs = TEST_CUSTOM_BUILDER.getStandardFields(
+            ImmutableList.of(TestEntitySpecBuilder.getSpec()));
     assertEquals(fieldConfigs.size(), 21);
     assertEquals(fieldConfigs.stream().map(SearchFieldConfig::fieldName).collect(Collectors.toSet()), Set.of(
             "nestedArrayArrayField",
@@ -379,7 +388,8 @@ public class SearchQueryBuilderTest extends AbstractTestNGSpringContextTests {
                     Mockito.mock(DataSchema.class)))
     );
 
-    fieldConfigs = TEST_CUSTOM_BUILDER.getStandardFields(ImmutableList.of(TestEntitySpecBuilder.getSpec(), mockEntitySpec));
+    fieldConfigs = TEST_CUSTOM_BUILDER.getStandardFields(
+            ImmutableList.of(TestEntitySpecBuilder.getSpec(), mockEntitySpec));
     // Same 21 from the original entity + newFieldNotInOriginal + 3 word gram fields from the textFieldOverride
     assertEquals(fieldConfigs.size(), 26);
     assertEquals(fieldConfigs.stream().map(SearchFieldConfig::fieldName).collect(Collectors.toSet()), Set.of(

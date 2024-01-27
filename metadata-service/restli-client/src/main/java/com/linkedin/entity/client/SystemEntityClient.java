@@ -2,6 +2,7 @@ package com.linkedin.entity.client;
 
 import com.datahub.authentication.Authentication;
 import com.linkedin.common.urn.Urn;
+import com.linkedin.data.template.RecordTemplate;
 import com.linkedin.entity.EntityResponse;
 import com.linkedin.metadata.config.cache.client.EntityClientCacheConfig;
 import com.linkedin.mxe.MetadataChangeProposal;
@@ -87,5 +88,9 @@ public interface SystemEntityClient extends EntityClient {
 
     default void setWritable(boolean canWrite) throws RemoteInvocationException {
         setWritable(canWrite, getSystemAuthentication());
+    }
+
+    default RecordTemplate getLatestAspect(@Nonnull String urn, @Nonnull String aspect) throws RemoteInvocationException {
+       return getLatestAspect(urn, aspect, getSystemAuthentication());
     }
 }
