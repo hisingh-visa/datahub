@@ -12,7 +12,6 @@ import com.linkedin.metadata.Constants;
 import com.linkedin.metadata.entity.EntityUtils;
 import com.linkedin.metadata.models.AspectSpec;
 import com.linkedin.metadata.models.EntitySpec;
-import com.linkedin.metadata.models.FieldSpec;
 import com.linkedin.metadata.models.SearchScoreFieldSpec;
 import com.linkedin.metadata.models.SearchableFieldSpec;
 import com.linkedin.metadata.models.SearchableRefFieldSpec;
@@ -92,7 +91,7 @@ public class SearchDocumentTransformer {
       searchDocument.put("urn", urn.toString());
       extractedSearchableFields.forEach((key, values) -> setSearchableValue(key, values, searchDocument, forDelete));
       extractedSearchScoreFields.forEach((key, values) -> setSearchScoreValue(key, values, searchDocument, forDelete));
-      extractedSearchableRefFields.forEach((key, value) -> setSerchableRefValue(key, value, searchDocument, forDelete));
+      extractedSearchableRefFields.forEach((key, value) -> setSearchableRefValue(key, value, searchDocument, forDelete));
       result = Optional.of(searchDocument.toString());
     }
     return result;
@@ -203,51 +202,45 @@ public class SearchDocumentTransformer {
     }
   }
 
-  public void setSerchableRefValue(final FieldSpec fieldSpec, final List<Object> fieldValues,
-                                   final ObjectNode searchDocument, final Boolean forDelete) {
-    DataSchema.Type valueType = fieldSpec.getPegasusSchema().getType();
-    String fieldName = "";
-    FieldType fieldType;
-    boolean isArray = false;
-    if (fieldSpec instanceof SearchableRefFieldSpec) {
-      SearchableRefFieldSpec searchableRefFieldSpec = (SearchableRefFieldSpec) fieldSpec;
-      fieldName = searchableRefFieldSpec.getSearchableRefAnnotation().getFieldName();
-      fieldType = searchableRefFieldSpec.getSearchableRefAnnotation().getFieldType();
-      isArray = searchableRefFieldSpec.isArray();
-    } else if (fieldSpec instanceof SearchableFieldSpec) {
-      SearchableFieldSpec searchableFieldSpec = (SearchableFieldSpec) fieldSpec;
-      fieldName = searchableFieldSpec.getSearchableAnnotation().getFieldName();
-      fieldType = searchableFieldSpec.getSearchableAnnotation().getFieldType();
-      isArray = searchableFieldSpec.isArray();
-    } else {
-        return;
-    }
+  public void setSearchableRefValue(final SearchableRefFieldSpec searchableRefFieldSpec, final List<Object> fieldValues,
+                                    final ObjectNode searchDocument, final Boolean forDelete) {
+    DataSchema.Type valueType = searchableRefFieldSpec.getPegasusSchema().getType();
+    String fieldName = searchableRefFieldSpec.getSearchableRefAnnotation().getFieldName();
+    FieldType fieldType = searchableRefFieldSpec.getSearchableRefAnnotation().getFieldType();
+    boolean isArray = searchableRefFieldSpec.isArray();
+
     if (forDelete) {
       searchDocument.set(fieldName, JsonNodeFactory.instance.nullNode());
       return;
     }
+    int depth = searchableRefFieldSpec.getSearchableRefAnnotation().getDepth();
     if (isArray) {
       ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
       fieldValues.subList(0, Math.min(fieldValues.size(), maxArrayLength))
-              .forEach(value -> getNodeForRef(valueType, value, fieldType).ifPresent(arrayNode::add));
+              .forEach(value -> getNodeForRef(depth, value, fieldType).ifPresent(arrayNode::add));
       searchDocument.set(fieldName, arrayNode);
     } else if (!fieldValues.isEmpty()) {
       String finalFieldName = fieldName;
-      getNodeForRef(valueType, fieldValues.get(0), fieldType).ifPresent(node -> searchDocument.set(finalFieldName, node));
+      getNodeForRef(depth, fieldValues.get(0), fieldType).ifPresent(node -> searchDocument.set(finalFieldName, node));
     }
 
   }
 
-  private Optional<JsonNode> getNodeForRef(final DataSchema.Type schemaFieldType, final Object fieldValue,
+  private Optional<JsonNode> getNodeForRef(final int depth, final Object fieldValue,
                                            final FieldType fieldType) {
-    if (fieldValue.toString().isEmpty()) {
-      return Optional.empty();
+    if (depth == 0) {
+      if (fieldValue.toString().isEmpty()) {
+        return Optional.empty();
+      } else {
+        return Optional.of(JsonNodeFactory.instance.textNode(fieldValue.toString()));
+      }
     }
     if (fieldType == FieldType.URN || fieldType == FieldType.OBJECT) {
       ObjectNode resultNode = JsonNodeFactory.instance.objectNode();
       try {
         Urn eAUrn = EntityUtils.getUrnFromString(fieldValue.toString());
         if (entityClient.exists(eAUrn)) {
+          resultNode.set("urn", JsonNodeFactory.instance.textNode(fieldValue.toString()));
           String entityType = eAUrn.getEntityType();
           EntitySpec entitySpec = entityRegistry.getEntitySpec(entityType);
           for (Map.Entry<String, AspectSpec> mapEntry : entitySpec.getAspectSpecMap().entrySet()) {
@@ -256,13 +249,26 @@ public class SearchDocumentTransformer {
             if (!Constants.SKIP_REFRENCE_ASPECT.contains(aspectName)) {
               try {
                 RecordTemplate aspectDetails = entityClient.getLatestAspect(eAUrn.toString(), aspectName);
-                //further call FieldExtractor.extractField for searchable FieldSpec and call the same method
+                // Extract searchable fields and create node using getNodeForSearchable
                 final Map<SearchableFieldSpec, List<Object>> extractedSearchableFields =
                         FieldExtractor.extractFields(aspectDetails, aspectSpec.getSearchableFieldSpecs(), maxValueLength);
                 for (Map.Entry<SearchableFieldSpec, List<Object>> entry : extractedSearchableFields.entrySet()) {
                   SearchableFieldSpec spec = entry.getKey();
                   List<Object> value = entry.getValue();
                   String fieldName = spec.getSearchableAnnotation().getFieldName();
+                  if (value.isEmpty()) {
+                    continue;
+                  }
+                  resultNode.set(fieldName, getNodeForSearchable(spec, value).get(fieldName));
+                }
+
+                // Extract searchable ref fields and create node using getNodeForRef
+                final Map<SearchableRefFieldSpec, List<Object>> extractedSearchableRefFields =
+                        FieldExtractor.extractFields(aspectDetails, aspectSpec.getSearchableRefFieldSpecs(), maxValueLength);
+                for (Map.Entry<SearchableRefFieldSpec, List<Object>> entry : extractedSearchableRefFields.entrySet()) {
+                  SearchableRefFieldSpec spec = entry.getKey();
+                  List<Object> value = entry.getValue();
+                  String fieldName = spec.getSearchableRefAnnotation().getFieldName();
                   boolean isArray = spec.isArray();
                   if (value.isEmpty()) {
                     continue;
@@ -270,20 +276,15 @@ public class SearchDocumentTransformer {
                   if (isArray) {
                     ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
                     value.subList(0, Math.min(value.size(), maxArrayLength))
-                            .forEach(val -> getNodeForRef(spec.getPegasusSchema().getType(), val,
-                                    spec.getSearchableAnnotation().getFieldType()).ifPresent(arrayNode::add));
+                            .forEach(val -> getNodeForRef(depth - 1, val,
+                                    spec.getSearchableRefAnnotation().getFieldType()).ifPresent(arrayNode::add));
                     resultNode.set(fieldName, arrayNode);
                   } else {
-                      Object propertyValue = value.get(0);
-                      if (spec.getSearchableAnnotation().getFieldType() == FieldType.URN) {
-                        Optional<JsonNode> node = getNodeForRef(spec.getPegasusSchema().getType(), propertyValue,
-                                spec.getSearchableAnnotation().getFieldType());
-                        if (node.isPresent()) {
-                          resultNode.set(fieldName, node.get());
-                        }
-                      } else {
-                        resultNode.set(fieldName, JsonNodeFactory.instance.textNode(propertyValue.toString()));
-                      }
+                    Optional<JsonNode> node = getNodeForRef(depth - 1, value.get(0),
+                            spec.getSearchableRefAnnotation().getFieldType());
+                    if (node.isPresent()) {
+                      resultNode.set(fieldName, node.get());
+                    }
                   }
                 }
               } catch (RemoteInvocationException e) {
@@ -293,16 +294,74 @@ public class SearchDocumentTransformer {
             }
           }
         }
-      } catch (RemoteInvocationException e) {
-         return Optional.empty();
+        return Optional.of(resultNode);
       } catch (Exception e) {
-        log.error("Error while creating URN object of  {}: {}", fieldValue, e.toString());
+        log.error("Error while processing ref field of urn {} : {}", fieldValue, e.getMessage());
       }
-      return Optional.of(resultNode);
-    } else {
-      return Optional.of(JsonNodeFactory.instance.textNode(fieldValue.toString()));
     }
+    return Optional.empty();
   }
+
+
+
+  private JsonNode getNodeForSearchable(SearchableFieldSpec fieldSpec, final List<Object> fieldValues) {
+    ObjectNode resultNode = JsonNodeFactory.instance.objectNode();
+    DataSchema.Type valueType = fieldSpec.getPegasusSchema().getType();
+    Optional<Object> firstValue = fieldValues.stream().findFirst();
+    boolean isArray = fieldSpec.isArray();
+
+// Set hasValues field if exists
+    fieldSpec.getSearchableAnnotation().getHasValuesFieldName().ifPresent(fieldName -> {
+      if (valueType == DataSchema.Type.BOOLEAN) {
+        resultNode.set(fieldName, JsonNodeFactory.instance.booleanNode((Boolean) firstValue.orElse(false)));
+      } else {
+        resultNode.set(fieldName, JsonNodeFactory.instance.booleanNode(!fieldValues.isEmpty()));
+      }
+    });
+
+// Set numValues field if exists
+    fieldSpec.getSearchableAnnotation().getNumValuesFieldName().ifPresent(fieldName -> {
+      switch (valueType) {
+        case INT:
+          resultNode.set(fieldName, JsonNodeFactory.instance.numberNode((Integer) firstValue.orElse(0)));
+          break;
+        case LONG:
+          resultNode.set(fieldName, JsonNodeFactory.instance.numberNode((Long) firstValue.orElse(0L)));
+          break;
+        default:
+          resultNode.set(fieldName, JsonNodeFactory.instance.numberNode(fieldValues.size()));
+          break;
+      }
+    });
+
+    final String fieldName = fieldSpec.getSearchableAnnotation().getFieldName();
+    final FieldType fieldType = fieldSpec.getSearchableAnnotation().getFieldType();
+
+    if (isArray || (valueType == DataSchema.Type.MAP && fieldType != FieldType.OBJECT)) {
+      if (fieldType == FieldType.BROWSE_PATH_V2) {
+        String browsePathV2Value = getBrowsePathV2Value(fieldValues);
+        resultNode.set(fieldName, JsonNodeFactory.instance.textNode(browsePathV2Value));
+      } else {
+        ArrayNode arrayNode = JsonNodeFactory.instance.arrayNode();
+        fieldValues.subList(0, Math.min(fieldValues.size(), maxArrayLength))
+                .forEach(value -> getNodeForValue(valueType, value, fieldType).ifPresent(arrayNode::add));
+        resultNode.set(fieldName, arrayNode);
+      }
+    } else if (valueType == DataSchema.Type.MAP) {
+      ObjectNode dictDoc = JsonNodeFactory.instance.objectNode();
+      fieldValues.subList(0, Math.min(fieldValues.size(), maxObjectKeys)).forEach(fieldValue -> {
+        String[] keyValues = fieldValue.toString().split("=");
+        String key = keyValues[0];
+        String value = keyValues[1];
+        dictDoc.put(key, value);
+      });
+      resultNode.set(fieldName, dictDoc);
+    } else if (!fieldValues.isEmpty()) {
+      getNodeForValue(valueType, fieldValues.get(0), fieldType).ifPresent(node -> resultNode.set(fieldName, node));
+    }
+    return resultNode;
+  }
+
   private Optional<JsonNode> getNodeForValue(final DataSchema.Type schemaFieldType, final Object fieldValue,
       final FieldType fieldType) {
     switch (schemaFieldType) {

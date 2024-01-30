@@ -39,6 +39,8 @@ public class SearchableRefAnnotation {
     double boostScore;
     // defines what depth should be explored of reference object
     int depth;
+
+    String refType;
     // (Optional) Aliases for this given field that can be used for sorting etc.
     List<String> fieldNameAliases;
 
@@ -77,6 +79,13 @@ public class SearchableRefAnnotation {
                     "Failed to validate @%s annotation declared at %s: Invalid field 'fieldType'. Invalid fieldType provided. Valid types are %s",
                     ANNOTATION_NAME, context, Arrays.toString(SearchableAnnotation.FieldType.values())));
         }
+        final Optional<String> refType = AnnotationUtils.getField(map, "refType", String.class);
+        if (!refType.isPresent()) {
+            throw new ModelValidationException(
+                    String.format("Failed to validate @%s annotation declared at %s: "
+                                   + "Mandatory input field refType defining the Entity Type is not provided",
+                            ANNOTATION_NAME, context));
+        }
 
         final Optional<Boolean> queryByDefault = AnnotationUtils.getField(map, "queryByDefault", Boolean.class);
         final Optional<Boolean> enableAutocomplete = AnnotationUtils.getField(map, "enableAutocomplete", Boolean.class);
@@ -91,6 +100,7 @@ public class SearchableRefAnnotation {
                 false,
                 boostScore.orElse(1.0),
                 depth.orElse(2),
+                refType.get(),
                 fieldNameAliases);
     }
 
@@ -121,14 +131,6 @@ public class SearchableRefAnnotation {
             return Boolean.FALSE;
         }
         return maybeQueryByDefault.get();
-    }
-
-    private static String capitalizeFirstLetter(String str) {
-        if (str == null || str.length() == 0) {
-            return str;
-        } else {
-            return str.substring(0, 1).toUpperCase() + str.substring(1);
-        }
     }
 
     private static List<String> getFieldNameAliases(Map map) {
