@@ -112,6 +112,7 @@ public class SearchableRefFieldSpecExtractor implements SchemaVisitor {
             annotation.isEnableAutocomplete(),
             annotation.getBoostScore(),
             annotation.getDepth(),
+            annotation.getRefType(),
             annotation.getFieldNameAliases());
       }
     }

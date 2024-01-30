@@ -15,6 +15,7 @@ import com.linkedin.metadata.Constants;
 import com.linkedin.metadata.models.EntitySpec;
 import com.linkedin.metadata.models.SearchScoreFieldSpec;
 import com.linkedin.metadata.models.SearchableFieldSpec;
+import com.linkedin.metadata.models.SearchableRefFieldSpec;
 import com.linkedin.metadata.models.annotation.SearchScoreAnnotation;
 import com.linkedin.metadata.models.annotation.SearchableAnnotation;
 
@@ -33,6 +34,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.linkedin.metadata.models.registry.EntityRegistry;
 import com.linkedin.metadata.search.utils.ESUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.common.lucene.search.function.CombineFunction;
@@ -79,6 +81,7 @@ public class SearchQueryBuilder {
   private final WordGramConfiguration wordGramConfiguration;
 
   private final CustomizedQueryHandler customizedQueryHandler;
+  private EntityRegistry entityRegistry;
 
   public SearchQueryBuilder(@Nonnull SearchConfiguration searchConfiguration,
                             @Nullable CustomSearchConfiguration customSearchConfiguration) {
@@ -88,7 +91,11 @@ public class SearchQueryBuilder {
     this.customizedQueryHandler = CustomizedQueryHandler.builder(customSearchConfiguration).build();
   }
 
-  public QueryBuilder buildQuery(@Nonnull List<EntitySpec> entitySpecs, @Nonnull String query, boolean fulltext) {
+  public void setEntityRegistry(EntityRegistry entityRegistry){
+    this.entityRegistry = entityRegistry;
+  }
+  public QueryBuilder buildQuery(@Nonnull List<EntitySpec> entitySpecs,
+                                 @Nonnull String query, boolean fulltext) {
     QueryConfiguration customQueryConfig = customizedQueryHandler.lookupQueryConfig(query).orElse(null);
 
     final QueryBuilder queryBuilder = buildInternalQuery(customQueryConfig, entitySpecs, query, fulltext);
@@ -103,15 +110,15 @@ public class SearchQueryBuilder {
    * @param fulltext use fulltext queries
    * @return query builder
    */
-  private QueryBuilder buildInternalQuery(@Nullable QueryConfiguration customQueryConfig, @Nonnull List<EntitySpec> entitySpecs,
-                                          @Nonnull String query, boolean fulltext) {
+  private QueryBuilder buildInternalQuery(@Nullable QueryConfiguration customQueryConfig,
+                                          @Nonnull List<EntitySpec> entitySpecs,  @Nonnull String query, boolean fulltext) {
     final String sanitizedQuery = query.replaceFirst("^:+", "");
     final BoolQueryBuilder finalQuery = Optional.ofNullable(customQueryConfig)
             .flatMap(cqc -> boolQueryBuilder(cqc, sanitizedQuery))
             .orElse(QueryBuilders.boolQuery());
 
     if (fulltext && !query.startsWith(STRUCTURED_QUERY_PREFIX)) {
-      getSimpleQuery(customQueryConfig, entitySpecs, sanitizedQuery).ifPresent(finalQuery::should);
+      getSimpleQuery(customQueryConfig, entitySpecs, sanitizedQuery).ifPresent(finalQuery::should); //114
       getPrefixAndExactMatchQuery(customQueryConfig, entitySpecs, sanitizedQuery).ifPresent(finalQuery::should);
     } else {
       final String withoutQueryPrefix = query.startsWith(STRUCTURED_QUERY_PREFIX) ? query.substring(STRUCTURED_QUERY_PREFIX.length()) : query;
@@ -217,12 +224,19 @@ public class SearchQueryBuilder {
         }
       }
     }
+
+    List<SearchableRefFieldSpec> searchableRefFieldSpecs = entitySpec.getSearchableRefFieldSpecs();
+    for (SearchableRefFieldSpec refFieldSpec : searchableRefFieldSpecs) {
+      int depth = refFieldSpec.getSearchableRefAnnotation().getDepth();
+      Set<SearchFieldConfig> searchFieldConfig = SearchFieldConfig.detectSubFieldType(
+                                                                refFieldSpec , depth , entityRegistry);
+      fields.addAll(searchFieldConfig);
+    }
     return fields;
   }
 
   private Set<SearchFieldConfig> getStandardFields(@Nonnull EntitySpec entitySpec) {
     Set<SearchFieldConfig> fields = new HashSet<>();
-
     // Always present
     final float urnBoost = Float.parseFloat((String) PRIMARY_URN_SEARCH_PROPERTIES.get("boostScore"));
 
