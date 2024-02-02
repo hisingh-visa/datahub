@@ -18,6 +18,13 @@ public interface PlatformEventHook {
   default void init() { }
 
   /**
+   * Return whether the hook is enabled or not. If not enabled, the below invoke method is not triggered
+   */
+  default boolean isEnabled() {
+    return true;
+  }
+
+  /**
    * Invoke the hook when a PlatformEvent is received
    */
   void invoke(@Nonnull PlatformEvent event);
