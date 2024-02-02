@@ -216,6 +216,4 @@ public interface EntitySearchService {
    * Max result size returned by the underlying search backend
    */
   int maxResultSize();
-
-
 }
