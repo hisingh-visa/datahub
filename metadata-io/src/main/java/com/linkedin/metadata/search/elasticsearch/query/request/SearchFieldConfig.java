@@ -30,6 +30,7 @@ public class SearchFieldConfig {
     public static final float DEFAULT_BOOST = 1.0f;
 
     public static final Set<String> KEYWORD_FIELDS = Set.of("urn", "runId", "_index");
+    public static final Set<String> REFERENCE_FIELDS = Set.of("editedFieldBusinessAttributeRef.");
     public static final Set<String> PATH_HIERARCHY_FIELDS = Set.of("browsePathV2");
 
     // These should not be used directly since there is a specific

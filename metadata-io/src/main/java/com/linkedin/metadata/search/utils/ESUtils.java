@@ -37,6 +37,7 @@ import org.opensearch.search.suggest.term.TermSuggestionBuilder;
 
 import static com.linkedin.metadata.search.elasticsearch.query.request.SearchFieldConfig.KEYWORD_FIELDS;
 import static com.linkedin.metadata.search.elasticsearch.query.request.SearchFieldConfig.PATH_HIERARCHY_FIELDS;
+import static com.linkedin.metadata.search.elasticsearch.query.request.SearchFieldConfig.REFERENCE_FIELDS;
 import static com.linkedin.metadata.search.utils.SearchUtils.isUrn;
 
 
@@ -80,13 +81,13 @@ public class ESUtils {
   // we use this to make sure we filter for editable & non-editable fields. Also expands out top-level properties
   // to field level properties
   public static final Map<String, List<String>> FIELDS_TO_EXPANDED_FIELDS_LIST = new HashMap<String, List<String>>() {{
-    put("tags", ImmutableList.of("tags", "fieldTags", "editedFieldTags"));
-    put("glossaryTerms", ImmutableList.of("glossaryTerms", "fieldGlossaryTerms", "editedFieldGlossaryTerms"));
-    put("fieldTags", ImmutableList.of("fieldTags", "editedFieldTags"));
-    put("fieldGlossaryTerms", ImmutableList.of("fieldGlossaryTerms", "editedFieldGlossaryTerms"));
+    put("tags", ImmutableList.of("tags", "fieldTags", "editedFieldTags", "editedFieldBusinessAttributeRef.editedFieldTags"));
+    put("glossaryTerms", ImmutableList.of("glossaryTerms", "fieldGlossaryTerms", "editedFieldGlossaryTerms", "editedFieldBusinessAttributeRef.editedFieldGlossaryTerms"));
+    put("fieldTags", ImmutableList.of("fieldTags", "editedFieldTags", "editedFieldBusinessAttributeRef.editedFieldTags"));
+    put("fieldGlossaryTerms", ImmutableList.of("fieldGlossaryTerms", "editedFieldGlossaryTerms", "editedFieldGlossaryTerms", "editedFieldBusinessAttributeRef.editedFieldGlossaryTerms"));
     put("fieldDescriptions", ImmutableList.of("fieldDescriptions", "editedFieldDescriptions"));
     put("description", ImmutableList.of("description", "editedDescription"));
-    put("businessAttribute", ImmutableList.of("editedFieldBusinessAttribute", "businessAttribute"));
+    put("businessAttribute", ImmutableList.of("editedFieldBusinessAttributeRef.urn", "businessAttribute", "editedFieldBusinessAttributeRef"));
   }};
 
   public static final Set<String> BOOLEAN_FIELDS = ImmutableSet.of(
@@ -304,10 +305,13 @@ public class ESUtils {
 
   @Nonnull
   public static String toKeywordField(@Nonnull final String filterField, @Nonnull final boolean skipKeywordSuffix) {
+    // check if field name is part of reference field and not urn field added through @SearchableRef
+    boolean isReferenceField = REFERENCE_FIELDS.stream()
+            .anyMatch(ref -> filterField.startsWith(ref)) && !filterField.endsWith(DEFAULT_SEARCH_RESULTS_SORT_BY_FIELD);
     return skipKeywordSuffix
             || KEYWORD_FIELDS.contains(filterField)
             || PATH_HIERARCHY_FIELDS.contains(filterField)
-            || filterField.contains(".") ? filterField : filterField + ESUtils.KEYWORD_SUFFIX;
+            || ( filterField.contains(".") && !isReferenceField ) || filterField.endsWith(KEYWORD_SUFFIX) ? filterField : filterField + ESUtils.KEYWORD_SUFFIX;
   }
 
   public static RequestOptions buildReindexTaskRequestOptions(String version, String indexName, String tempIndexName) {
