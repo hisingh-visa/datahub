@@ -46,6 +46,7 @@ public class ESWriteDAO {
     bulkProcessor.add(updateRequest);
   }
 
+
   /**
    * Deletes the document with the given document ID from the index.
    *

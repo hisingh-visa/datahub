@@ -25,6 +25,7 @@ public class DefaultEntitySpec implements EntitySpec {
   private final TyperefDataSchema _aspectTyperefSchema;
 
   private List<SearchableFieldSpec> _searchableFieldSpecs;
+  private List<SearchableRefFieldSpec> _searchableRefFieldSpecs;
 
   public DefaultEntitySpec(
       @Nonnull final Collection<AspectSpec> aspectSpecs,
@@ -101,6 +102,13 @@ public class DefaultEntitySpec implements EntitySpec {
     }
 
     return _searchableFieldSpecs;
+  }
+  @Override
+  public List<SearchableRefFieldSpec> getSearchableRefFieldSpecs() {
+    if (_searchableRefFieldSpecs == null) {
+      _searchableRefFieldSpecs = EntitySpec.super.getSearchableRefFieldSpecs();
+    }
+    return _searchableRefFieldSpecs;
   }
 
 }

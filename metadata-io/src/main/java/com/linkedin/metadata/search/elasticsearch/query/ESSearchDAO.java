@@ -100,7 +100,7 @@ public class ESSearchDAO {
       final SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
       // extract results, validated against document model as well
       return transformIndexIntoEntityName(SearchRequestHandler
-              .getBuilder(entitySpec, searchConfiguration, customSearchConfiguration)
+              .getBuilder(entitySpec, entityRegistry, searchConfiguration, customSearchConfiguration)
               .extractResult(searchResponse, filter, from, size));
     } catch (Exception e) {
       log.error("Search query failed", e);
@@ -163,7 +163,7 @@ public class ESSearchDAO {
       final SearchResponse searchResponse = client.search(searchRequest, RequestOptions.DEFAULT);
       // extract results, validated against document model as well
       return transformIndexIntoEntityName(SearchRequestHandler
-              .getBuilder(entitySpecs, searchConfiguration, customSearchConfiguration)
+              .getBuilder(entitySpecs, entityRegistry, searchConfiguration, customSearchConfiguration)
               .extractScrollResult(searchResponse,
               filter, scrollId, keepAlive, size, supportsPointInTime()));
     } catch (Exception e) {
@@ -194,7 +194,7 @@ public class ESSearchDAO {
     Filter transformedFilters = transformFilterForEntities(postFilters, indexConvention);
     // Step 1: construct the query
     final SearchRequest searchRequest = SearchRequestHandler
-            .getBuilder(entitySpecs, searchConfiguration, customSearchConfiguration)
+            .getBuilder(entitySpecs, entityRegistry, searchConfiguration, customSearchConfiguration)
             .getSearchRequest(finalInput, transformedFilters, sortCriterion, from, size, searchFlags, facets);
     searchRequest.indices(entityNames.stream()
         .map(indexConvention::getEntityIndexName)
@@ -220,7 +220,7 @@ public class ESSearchDAO {
     Filter transformedFilters = transformFilterForEntities(filters, indexConvention);
     final SearchRequest searchRequest =
         SearchRequestHandler
-                .getBuilder(entitySpec, searchConfiguration, customSearchConfiguration)
+                .getBuilder(entitySpec, entityRegistry, searchConfiguration, customSearchConfiguration)
                 .getFilterRequest(transformedFilters, sortCriterion, from, size);
 
     searchRequest.indices(indexConvention.getIndexName(entitySpec));
@@ -327,7 +327,7 @@ public class ESSearchDAO {
     Filter transformedFilters = transformFilterForEntities(postFilters, indexConvention);
     // Step 1: construct the query
     final SearchRequest searchRequest = SearchRequestHandler
-            .getBuilder(entitySpecs, searchConfiguration, customSearchConfiguration)
+            .getBuilder(entitySpecs, entityRegistry, searchConfiguration, customSearchConfiguration)
             .getSearchRequest(finalInput, transformedFilters, sortCriterion, sort, pitId, keepAlive, size, searchFlags);
 
     // PIT specifies indices in creation so it doesn't support specifying indices on the request, so we only specify if not using PIT

@@ -9,6 +9,8 @@ import com.linkedin.metadata.models.SearchableFieldSpec;
 import com.linkedin.metadata.models.TimeseriesFieldCollectionSpec;
 import com.linkedin.metadata.models.TimeseriesFieldSpec;
 import com.linkedin.metadata.models.annotation.AspectAnnotation;
+
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 
@@ -22,6 +24,6 @@ public class MockAspectSpec extends AspectSpec {
       @Nonnull List<TimeseriesFieldCollectionSpec> timeseriesFieldCollectionSpecs, RecordDataSchema schema,
       Class<RecordTemplate> aspectClass) {
     super(aspectAnnotation, searchableFieldSpecs, searchScoreFieldSpecs, relationshipFieldSpecs, timeseriesFieldSpecs,
-        timeseriesFieldCollectionSpecs, schema, aspectClass);
+        timeseriesFieldCollectionSpecs, Collections.emptyList(), schema, aspectClass);
   }
 }

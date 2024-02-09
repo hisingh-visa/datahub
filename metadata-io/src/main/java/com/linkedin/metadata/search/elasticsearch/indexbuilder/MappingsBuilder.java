@@ -4,7 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import com.linkedin.metadata.models.EntitySpec;
 import com.linkedin.metadata.models.SearchScoreFieldSpec;
 import com.linkedin.metadata.models.SearchableFieldSpec;
+import com.linkedin.metadata.models.SearchableRefFieldSpec;
 import com.linkedin.metadata.models.annotation.SearchableAnnotation.FieldType;
+import com.linkedin.metadata.models.registry.EntityRegistry;
 import com.linkedin.metadata.search.utils.ESUtils;
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +22,7 @@ import static com.linkedin.metadata.search.elasticsearch.indexbuilder.SettingsBu
 @Slf4j
 public class MappingsBuilder {
 
+  private static EntityRegistry entityRegistry;
   private static final Map<String, String> PARTIAL_NGRAM_CONFIG = ImmutableMap.of(
           TYPE, "search_as_you_type",
           MAX_SHINGLE_SIZE, "4",
@@ -55,7 +58,9 @@ public class MappingsBuilder {
         .forEach(searchableFieldSpec -> mappings.putAll(getMappingsForField(searchableFieldSpec)));
     entitySpec.getSearchScoreFieldSpecs()
         .forEach(searchScoreFieldSpec -> mappings.putAll(getMappingsForSearchScoreField(searchScoreFieldSpec)));
-
+    entitySpec.getSearchableRefFieldSpecs().forEach(searchableRefFieldSpec ->
+            mappings.putAll(getMappingForSearchableRefField(searchableRefFieldSpec,
+                    searchableRefFieldSpec.getSearchableRefAnnotation().getDepth())));
     // Fixed fields
     mappings.put("urn", getMappingsForUrn());
     mappings.put("runId", getMappingsForRunId());
@@ -201,6 +206,27 @@ public class MappingsBuilder {
         ImmutableMap.of(TYPE, ESUtils.DOUBLE_FIELD_TYPE));
   }
 
+  private static Map<String, Object> getMappingForSearchableRefField(
+          @Nonnull final SearchableRefFieldSpec searchableRefFieldSpec, @Nonnull final int depth) {
+    Map<String, Object> mappings = new HashMap<>();
+    Map<String, Object> mappingForField = new HashMap<>();
+    Map<String, Object> mappingForProperty = new HashMap<>();
+    if (depth == 0) {
+      mappings.put(searchableRefFieldSpec.getSearchableRefAnnotation().getFieldName(), getMappingsForUrn());
+      return mappings;
+    }
+    String entityType = searchableRefFieldSpec.getSearchableRefAnnotation().getRefType();
+    EntitySpec entitySpec = entityRegistry.getEntitySpec(entityType);
+    entitySpec.getSearchableFieldSpecs().forEach(searchableFieldSpec ->
+            mappingForField.putAll(getMappingsForField(searchableFieldSpec)));
+    entitySpec.getSearchableRefFieldSpecs().forEach(entitySearchableRefFieldSpec ->
+            mappingForField.putAll(getMappingForSearchableRefField(entitySearchableRefFieldSpec, depth - 1)));
+    mappingForField.put("urn", getMappingsForUrn());
+    mappingForProperty.put("properties", mappingForField);
+    mappings.put(searchableRefFieldSpec.getSearchableRefAnnotation().getFieldName(), mappingForProperty);
+    return mappings;
+  }
+
   private static Map<String, Object> getMappingsForFieldNameAliases(@Nonnull final SearchableFieldSpec searchableFieldSpec) {
     Map<String, Object> mappings = new HashMap<>();
     List<String> fieldNameAliases = searchableFieldSpec.getSearchableAnnotation().getFieldNameAliases();
@@ -212,4 +238,9 @@ public class MappingsBuilder {
     });
     return mappings;
   }
+
+  public static void setEntityRegistry(@Nonnull final EntityRegistry entityRegistryInput) {
+    entityRegistry = entityRegistryInput;
+  }
+
 }
