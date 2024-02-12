@@ -1,7 +1,12 @@
 package com.linkedin.metadata.search.elasticsearch.query.request;
 
+import com.linkedin.metadata.models.AspectSpec;
+import com.linkedin.metadata.models.EntitySpec;
 import com.linkedin.metadata.models.SearchableFieldSpec;
+import com.linkedin.metadata.models.SearchableRefFieldSpec;
 import com.linkedin.metadata.models.annotation.SearchableAnnotation;
+import com.linkedin.metadata.models.annotation.SearchableRefAnnotation;
+import com.linkedin.metadata.models.registry.EntityRegistry;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -9,8 +14,11 @@ import lombok.experimental.Accessors;
 
 import javax.annotation.Nonnull;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import static com.linkedin.metadata.Constants.SKIP_REFERENCE_ASPECT;
 import static com.linkedin.metadata.search.elasticsearch.indexbuilder.SettingsBuilder.*;
 
 
@@ -87,6 +95,7 @@ public class SearchFieldConfig {
     private boolean isDelimitedSubfield;
     private boolean isKeywordSubfield;
     private boolean isWordGramSubfield;
+//    private boolean isReferenceField;
 
     public static SearchFieldConfig detectSubFieldType(@Nonnull SearchableFieldSpec fieldSpec) {
         final SearchableAnnotation searchableAnnotation = fieldSpec.getSearchableAnnotation();
@@ -95,6 +104,63 @@ public class SearchFieldConfig {
         final SearchableAnnotation.FieldType fieldType = searchableAnnotation.getFieldType();
         return detectSubFieldType(fieldName, boost, fieldType, searchableAnnotation.isQueryByDefault());
     }
+
+    public static Set<SearchFieldConfig> detectSubFieldType(@Nonnull SearchableRefFieldSpec fieldSpec,
+                                                            int depth, EntityRegistry entityRegistry) {
+        Set<SearchFieldConfig> fieldConfigs = new HashSet<>();
+        final SearchableRefAnnotation searchableRefAnnotation = fieldSpec.getSearchableRefAnnotation();
+        String fieldName = searchableRefAnnotation.getFieldName();
+        final float boost = (float) searchableRefAnnotation.getBoostScore();
+        final SearchableAnnotation.FieldType fieldType = searchableRefAnnotation.getFieldType();
+        fieldConfigs.addAll(detectSubFieldType(fieldSpec, depth , entityRegistry, boost, ""));
+        return fieldConfigs;
+    }
+
+    public static Set<SearchFieldConfig> detectSubFieldType(@Nonnull SearchableRefFieldSpec refFieldSpec, int depth,
+                                                            EntityRegistry entityRegistry, float boost,
+                                                            String prefixFieldName) {
+        Set<SearchFieldConfig> fieldConfigs = new HashSet<>();
+        final SearchableRefAnnotation searchableRefAnnotation = refFieldSpec.getSearchableRefAnnotation();
+        EntitySpec refEntitySpec = entityRegistry.getEntitySpec(searchableRefAnnotation.getRefType());
+        String fieldName = searchableRefAnnotation.getFieldName();
+        final SearchableAnnotation.FieldType fieldType = searchableRefAnnotation.getFieldType();
+        if(!prefixFieldName.isEmpty()) {
+            fieldName = prefixFieldName + "." + fieldName;
+        }
+
+        if (depth == 0) {
+            // at depth 0 if URN is present then query by default should be true
+            fieldConfigs.add(detectSubFieldType(fieldName, boost, fieldType, true));
+            return fieldConfigs;
+        }
+
+        List<AspectSpec> aspectSpecs = refEntitySpec.getAspectSpecs();
+
+        for (AspectSpec aspectSpec : aspectSpecs) {
+             if (!SKIP_REFERENCE_ASPECT.contains(aspectSpec.getName())) {
+                for (SearchableFieldSpec searchableFieldSpec : aspectSpec.getSearchableFieldSpecs()) {
+                    String refFieldName = searchableFieldSpec.getSearchableAnnotation().getFieldName();
+                    refFieldName = fieldName + "." + refFieldName;
+
+                    final SearchableAnnotation searchableAnnotation = searchableFieldSpec.getSearchableAnnotation();
+                    final float refBoost = (float) searchableAnnotation.getBoostScore() * boost;
+                    final SearchableAnnotation.FieldType refFieldType = searchableAnnotation.getFieldType();
+                    fieldConfigs.add(detectSubFieldType(refFieldName, refBoost, refFieldType, searchableAnnotation.isQueryByDefault()));
+                }
+
+                for (SearchableRefFieldSpec searchableRefFieldSpec : aspectSpec.getSearchableRefFieldSpecs()) {
+                    String refFieldName = searchableRefFieldSpec.getSearchableRefAnnotation().getFieldName();
+                    refFieldName = fieldName + "." + refFieldName;
+                    final float refBoost = (float) searchableRefFieldSpec.getSearchableRefAnnotation().getBoostScore() * boost;
+                    fieldConfigs.addAll(detectSubFieldType(searchableRefFieldSpec, depth - 1, entityRegistry, refBoost, refFieldName));
+                }
+            }
+        }
+
+        return fieldConfigs;
+    }
+
+
 
     public static SearchFieldConfig detectSubFieldType(String fieldName,
                                                        SearchableAnnotation.FieldType fieldType,
@@ -116,7 +182,24 @@ public class SearchFieldConfig {
                 .isQueryByDefault(isQueryByDefault)
                 .build();
     }
+    public static Set<SearchFieldConfig> getStandardFields(EntitySpec entitySpec, int depth) {
+        Set<SearchFieldConfig> fieldConfigs = new HashSet<>();
 
+        // Generate a SearchFieldConfig for each field in the entity spec
+        for (SearchableFieldSpec fieldSpec : entitySpec.getSearchableFieldSpecs()) {
+            SearchFieldConfig fieldConfig = detectSubFieldType(fieldSpec);
+            fieldConfigs.add(fieldConfig);
+        }
+
+        // If the depth is greater than 0, generate SearchFieldConfig objects for the fields of any referenced entities
+        if (depth > 0) {
+            for (SearchableRefFieldSpec refFieldSpec : entitySpec.getSearchableRefFieldSpecs()) {
+//                SearchFieldConfig refFieldConfig = detectSubFieldType(refFieldSpec, depth - 1);
+//                fieldConfigs.add(refFieldConfig);
+            }
+        }
+        return fieldConfigs;
+    }
     public boolean isKeyword() {
         return KEYWORD_ANALYZER.equals(analyzer()) || isKeyword(fieldName());
     }

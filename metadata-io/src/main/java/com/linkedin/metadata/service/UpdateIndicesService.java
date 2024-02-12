@@ -573,4 +573,8 @@ public class UpdateIndicesService {
   public void setSystemEntityClient(SystemEntityClient systemEntityClient) {
     _searchDocumentTransformer.setEntityClient(systemEntityClient);
   }
+
+  public void setEntityRegistry() {
+    _searchDocumentTransformer.setEntityRegistry(this._entityRegistry);
+  }
 }

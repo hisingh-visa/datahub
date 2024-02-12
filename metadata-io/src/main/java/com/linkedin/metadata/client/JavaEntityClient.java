@@ -595,6 +595,13 @@ public class JavaEntityClient implements EntityClient {
         _restliEntityClient.rollbackIngestion(runId, authentication);
     }
 
+    @SneakyThrows
+    @Override
+    public RecordTemplate getLatestAspect(@Nonnull String urn, @Nonnull String aspect,
+                                          @Nonnull Authentication authentication) throws RemoteInvocationException {
+        return _entityService.getLatestAspect(Urn.createFromString(urn), aspect);
+    }
+
     private void tryIndexRunId(Urn entityUrn, @Nullable SystemMetadata systemMetadata) {
         if (systemMetadata != null && systemMetadata.hasRunId()) {
             _entitySearchService.appendRunId(entityUrn.getEntityType(), entityUrn, systemMetadata.getRunId());
