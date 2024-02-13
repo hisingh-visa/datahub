@@ -50,6 +50,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
 import org.testng.annotations.Test;
 
+import javax.annotation.PostConstruct;
+
 @Import(SearchCommonTestConfiguration.class)
 public class SearchQueryBuilderTest extends AbstractTestNGSpringContextTests {
 
@@ -86,6 +88,11 @@ public class SearchQueryBuilderTest extends AbstractTestNGSpringContextTests {
   public static final SearchQueryBuilder TEST_BUILDER =
       new SearchQueryBuilder(testQueryConfig, null);
 
+  @PostConstruct
+  public void setup(){
+    TEST_BUILDER.setEntityRegistry(entityRegistry);
+    TEST_CUSTOM_BUILDER.setEntityRegistry(entityRegistry);
+  }
   @Test
   public void testQueryBuilderFulltext() {
     FunctionScoreQueryBuilder result =

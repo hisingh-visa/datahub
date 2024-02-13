@@ -23,6 +23,7 @@ public class AspectSpec {
   private final Map<String, RelationshipFieldSpec> _relationshipFieldSpecs;
   private final Map<String, TimeseriesFieldSpec> _timeseriesFieldSpecs;
   private final Map<String, TimeseriesFieldCollectionSpec> _timeseriesFieldCollectionSpecs;
+  private final Map<String, SearchableRefFieldSpec> _searchableRefFieldSpecs;
 
   // Classpath & Pegasus-specific: Temporary.
   private final RecordDataSchema _schema;
@@ -37,6 +38,7 @@ public class AspectSpec {
       @Nonnull final List<RelationshipFieldSpec> relationshipFieldSpecs,
       @Nonnull final List<TimeseriesFieldSpec> timeseriesFieldSpecs,
       @Nonnull final List<TimeseriesFieldCollectionSpec> timeseriesFieldCollectionSpecs,
+      @Nonnull final List<SearchableRefFieldSpec> searchableRefFieldSpecs,
       final RecordDataSchema schema,
       final Class<RecordTemplate> aspectClass) {
     _aspectAnnotation = aspectAnnotation;
@@ -45,6 +47,10 @@ public class AspectSpec {
             .collect(
                 Collectors.toMap(
                     spec -> spec.getPath().toString(), spec -> spec, (val1, val2) -> val1));
+    _searchableRefFieldSpecs = searchableRefFieldSpecs.stream()
+            .collect(
+                Collectors.toMap(
+                     spec -> spec.getPath().toString(), spec -> spec, (val1, val2) -> val1));
     _searchScoreFieldSpecs =
         searchScoreFieldSpecs.stream()
             .collect(
@@ -111,6 +117,10 @@ public class AspectSpec {
 
   public List<SearchableFieldSpec> getSearchableFieldSpecs() {
     return new ArrayList<>(_searchableFieldSpecs.values());
+  }
+
+  public List<SearchableRefFieldSpec> getSearchableRefFieldSpecs() {
+    return new ArrayList<>(_searchableRefFieldSpecs.values());
   }
 
   public List<SearchScoreFieldSpec> getSearchScoreFieldSpecs() {
