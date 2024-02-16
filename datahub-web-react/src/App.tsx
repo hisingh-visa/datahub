@@ -14,7 +14,6 @@ import { PageRoutes } from './conf/Global';
 import { isLoggedInVar } from './app/auth/checkAuthStatus';
 import { GlobalCfg } from './conf';
 import possibleTypesResult from './possibleTypes.generated';
-import { BusinessAttributeEntity } from './app/entity/businessAttribute/BusinessAttributeEntity';
 
 /*
     Construct Apollo Client

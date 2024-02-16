@@ -47,7 +47,7 @@ export default function ForeignKeyLabel({
 
     return (
         <>
-            <span
+            <span aria-label="button"
                 role="button"
                 tabIndex={0}
                 onKeyPress={(e) => (e.key === 'Enter' ? onOpenFk() : null)}

@@ -228,7 +228,8 @@ public class ESSearchDAO {
     Filter transformedFilters = transformFilterForEntities(postFilters, indexConvention);
     // Step 1: construct the query
     final SearchRequest searchRequest =
-        SearchRequestHandler.getBuilder(entitySpecs, entityRegistry, searchConfiguration, customSearchConfiguration)
+        SearchRequestHandler.getBuilder(
+                entitySpecs, entityRegistry, searchConfiguration, customSearchConfiguration)
             .getSearchRequest(
                 finalInput, transformedFilters, sortCriterion, from, size, searchFlags, facets);
     searchRequest.indices(
@@ -259,7 +260,8 @@ public class ESSearchDAO {
     EntitySpec entitySpec = entityRegistry.getEntitySpec(entityName);
     Filter transformedFilters = transformFilterForEntities(filters, indexConvention);
     final SearchRequest searchRequest =
-        SearchRequestHandler.getBuilder(entitySpec, entityRegistry, searchConfiguration, customSearchConfiguration)
+        SearchRequestHandler.getBuilder(
+                entitySpec, entityRegistry, searchConfiguration, customSearchConfiguration)
             .getFilterRequest(transformedFilters, sortCriterion, from, size);
 
     searchRequest.indices(indexConvention.getIndexName(entitySpec));
@@ -389,7 +391,8 @@ public class ESSearchDAO {
     Filter transformedFilters = transformFilterForEntities(postFilters, indexConvention);
     // Step 1: construct the query
     final SearchRequest searchRequest =
-        SearchRequestHandler.getBuilder(entitySpecs, entityRegistry, searchConfiguration, customSearchConfiguration)
+        SearchRequestHandler.getBuilder(
+                entitySpecs, entityRegistry, searchConfiguration, customSearchConfiguration)
             .getSearchRequest(
                 finalInput,
                 transformedFilters,

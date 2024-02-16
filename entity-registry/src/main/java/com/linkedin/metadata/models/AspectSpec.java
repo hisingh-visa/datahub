@@ -72,8 +72,11 @@ public class AspectSpec {
                     spec -> spec.getTimeseriesFieldCollectionAnnotation().getCollectionName(),
                     spec -> spec,
                     (val1, val2) -> val1));
-    _searchableRefFieldSpecs = searchableRefFieldSpecs.stream()
-            .collect(Collectors.toMap(spec -> spec.getPath().toString(), spec -> spec, (val1, val2) -> val1));
+    _searchableRefFieldSpecs =
+        searchableRefFieldSpecs.stream()
+            .collect(
+                Collectors.toMap(
+                    spec -> spec.getPath().toString(), spec -> spec, (val1, val2) -> val1));
     _schema = schema;
     _aspectClass = aspectClass;
   }

@@ -602,5 +602,7 @@ public interface EntityClient {
   public void rollbackIngestion(@Nonnull String runId, @Nonnull Authentication authentication)
       throws Exception;
 
-  public RecordTemplate getLatestAspect(@Nonnull String urn, @Nonnull String aspect, @Nonnull Authentication authentication) throws RemoteInvocationException;
+  public RecordTemplate getLatestAspect(
+      @Nonnull String urn, @Nonnull String aspect, @Nonnull Authentication authentication)
+      throws RemoteInvocationException;
 }

@@ -100,7 +100,8 @@ public interface SystemEntityClient extends EntityClient {
     setWritable(canWrite, getSystemAuthentication());
   }
 
-    default RecordTemplate getLatestAspect(@Nonnull String urn, @Nonnull String aspect) throws RemoteInvocationException {
-       return getLatestAspect(urn, aspect, getSystemAuthentication());
-    }
+  default RecordTemplate getLatestAspect(@Nonnull String urn, @Nonnull String aspect)
+      throws RemoteInvocationException {
+    return getLatestAspect(urn, aspect, getSystemAuthentication());
+  }
 }

@@ -735,33 +735,39 @@ public class EntityApiDelegateImpl<I, O, S> {
     return deleteAspect(urn, methodNameToAspectName(methodName));
   }
 
-    public ResponseEntity<BusinessAttributeInfoAspectResponseV2> createBusinessAttributeInfo(BusinessAttributeInfoAspectRequestV2 body, String urn) {
-        String methodName = walker.walk(frames -> frames
-                .findFirst()
-                .map(StackWalker.StackFrame::getMethodName)).get();
-        return createAspect(urn, methodNameToAspectName(methodName), body, BusinessAttributeInfoAspectRequestV2.class,
-                BusinessAttributeInfoAspectResponseV2.class);
-    }
+  public ResponseEntity<BusinessAttributeInfoAspectResponseV2> createBusinessAttributeInfo(
+      BusinessAttributeInfoAspectRequestV2 body, String urn) {
+    String methodName =
+        walker.walk(frames -> frames.findFirst().map(StackWalker.StackFrame::getMethodName)).get();
+    return createAspect(
+        urn,
+        methodNameToAspectName(methodName),
+        body,
+        BusinessAttributeInfoAspectRequestV2.class,
+        BusinessAttributeInfoAspectResponseV2.class);
+  }
 
-    public ResponseEntity<Void> deleteBusinessAttributeInfo(String urn) {
-        String methodName = walker.walk(frames -> frames
-                .findFirst()
-                .map(StackWalker.StackFrame::getMethodName)).get();
-        return deleteAspect(urn, methodNameToAspectName(methodName));
-    }
+  public ResponseEntity<Void> deleteBusinessAttributeInfo(String urn) {
+    String methodName =
+        walker.walk(frames -> frames.findFirst().map(StackWalker.StackFrame::getMethodName)).get();
+    return deleteAspect(urn, methodNameToAspectName(methodName));
+  }
 
-    public ResponseEntity<BusinessAttributeInfoAspectResponseV2> getBusinessAttributeInfo(String urn, Boolean systemMetadata) {
-        String methodName = walker.walk(frames -> frames
-                .findFirst()
-                .map(StackWalker.StackFrame::getMethodName)).get();
-        return getAspect(urn, systemMetadata, methodNameToAspectName(methodName), _respClazz,
-                BusinessAttributeInfoAspectResponseV2.class);
-    }
+  public ResponseEntity<BusinessAttributeInfoAspectResponseV2> getBusinessAttributeInfo(
+      String urn, Boolean systemMetadata) {
+    String methodName =
+        walker.walk(frames -> frames.findFirst().map(StackWalker.StackFrame::getMethodName)).get();
+    return getAspect(
+        urn,
+        systemMetadata,
+        methodNameToAspectName(methodName),
+        _respClazz,
+        BusinessAttributeInfoAspectResponseV2.class);
+  }
 
-    public ResponseEntity<Void> headBusinessAttributeInfo(String urn) {
-        String methodName = walker.walk(frames -> frames
-                .findFirst()
-                .map(StackWalker.StackFrame::getMethodName)).get();
-        return headAspect(urn, methodNameToAspectName(methodName));
-    }
+  public ResponseEntity<Void> headBusinessAttributeInfo(String urn) {
+    String methodName =
+        walker.walk(frames -> frames.findFirst().map(StackWalker.StackFrame::getMethodName)).get();
+    return headAspect(urn, methodNameToAspectName(methodName));
+  }
 }

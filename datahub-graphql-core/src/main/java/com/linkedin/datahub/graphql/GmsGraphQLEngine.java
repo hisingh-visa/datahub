@@ -33,6 +33,8 @@ import com.linkedin.datahub.graphql.generated.AutoCompleteResults;
 import com.linkedin.datahub.graphql.generated.BrowsePathEntry;
 import com.linkedin.datahub.graphql.generated.BrowseResultGroupV2;
 import com.linkedin.datahub.graphql.generated.BrowseResults;
+import com.linkedin.datahub.graphql.generated.BusinessAttribute;
+import com.linkedin.datahub.graphql.generated.BusinessAttributeAssociation;
 import com.linkedin.datahub.graphql.generated.Chart;
 import com.linkedin.datahub.graphql.generated.ChartInfo;
 import com.linkedin.datahub.graphql.generated.Container;
@@ -66,13 +68,13 @@ import com.linkedin.datahub.graphql.generated.IngestionSource;
 import com.linkedin.datahub.graphql.generated.InstitutionalMemoryMetadata;
 import com.linkedin.datahub.graphql.generated.LineageRelationship;
 import com.linkedin.datahub.graphql.generated.ListAccessTokenResult;
+import com.linkedin.datahub.graphql.generated.ListBusinessAttributesResult;
 import com.linkedin.datahub.graphql.generated.ListDomainsResult;
 import com.linkedin.datahub.graphql.generated.ListGroupsResult;
 import com.linkedin.datahub.graphql.generated.ListOwnershipTypesResult;
 import com.linkedin.datahub.graphql.generated.ListQueriesResult;
 import com.linkedin.datahub.graphql.generated.ListTestsResult;
 import com.linkedin.datahub.graphql.generated.ListViewsResult;
-import com.linkedin.datahub.graphql.generated.ListBusinessAttributesResult;
 import com.linkedin.datahub.graphql.generated.MLFeature;
 import com.linkedin.datahub.graphql.generated.MLFeatureProperties;
 import com.linkedin.datahub.graphql.generated.MLFeatureTable;
@@ -99,8 +101,6 @@ import com.linkedin.datahub.graphql.generated.SiblingProperties;
 import com.linkedin.datahub.graphql.generated.Test;
 import com.linkedin.datahub.graphql.generated.TestResult;
 import com.linkedin.datahub.graphql.generated.UserUsageCounts;
-import com.linkedin.datahub.graphql.generated.BusinessAttribute;
-import com.linkedin.datahub.graphql.generated.BusinessAttributeAssociation;
 import com.linkedin.datahub.graphql.resolvers.MeResolver;
 import com.linkedin.datahub.graphql.resolvers.assertion.AssertionRunEventResolver;
 import com.linkedin.datahub.graphql.resolvers.assertion.DeleteAssertionResolver;
@@ -402,7 +402,7 @@ public class GmsGraphQLEngine {
   private final LineageService lineageService;
   private final QueryService queryService;
   private final DataProductService dataProductService;
-    private final BusinessAttributeService businessAttributeService;
+  private final BusinessAttributeService businessAttributeService;
   private final FeatureFlags featureFlags;
 
   private final IngestionConfiguration ingestionConfiguration;
@@ -451,7 +451,7 @@ public class GmsGraphQLEngine {
   private final OwnershipType ownershipType;
   private final BusinessAttributeType businessAttributeType;
 
-    /** A list of GraphQL Plugins that extend the core engine */
+  /** A list of GraphQL Plugins that extend the core engine */
   private final List<GmsGraphQLPlugin> graphQLPlugins;
 
   /** Configures the graph objects that can be fetched primary key. */
@@ -505,7 +505,7 @@ public class GmsGraphQLEngine {
     this.lineageService = args.lineageService;
     this.queryService = args.queryService;
     this.dataProductService = args.dataProductService;
-        this.businessAttributeService = args.businessAttributeService;
+    this.businessAttributeService = args.businessAttributeService;
 
     this.ingestionConfiguration = Objects.requireNonNull(args.ingestionConfiguration);
     this.authenticationConfiguration = Objects.requireNonNull(args.authenticationConfiguration);
@@ -632,50 +632,49 @@ public class GmsGraphQLEngine {
     this.graphQLPlugins.forEach(plugin -> plugin.configureExtraResolvers(builder, this));
   }
 
-
-    public void configureRuntimeWiring(final RuntimeWiring.Builder builder) {
-        configureQueryResolvers(builder);
-        configureMutationResolvers(builder);
-        configureGenericEntityResolvers(builder);
-        configureDatasetResolvers(builder);
-        configureCorpUserResolvers(builder);
-        configureCorpGroupResolvers(builder);
-        configureDashboardResolvers(builder);
-        configureNotebookResolvers(builder);
-        configureChartResolvers(builder);
-        configureTypeResolvers(builder);
-        configureTypeExtensions(builder);
-        configureTagAssociationResolver(builder);
-        configureGlossaryTermAssociationResolver(builder);
-        configureDataJobResolvers(builder);
-        configureDataFlowResolvers(builder);
-        configureMLFeatureTableResolvers(builder);
-        configureGlossaryRelationshipResolvers(builder);
-        configureIngestionSourceResolvers(builder);
-        configureAnalyticsResolvers(builder);
-        configureContainerResolvers(builder);
-        configureDataPlatformInstanceResolvers(builder);
-        configureGlossaryTermResolvers(builder);
-        configureOrganisationRoleResolvers(builder);
-        configureGlossaryNodeResolvers(builder);
-        configureDomainResolvers(builder);
-        configureDataProductResolvers(builder);
-        configureAssertionResolvers(builder);
-        configurePolicyResolvers(builder);
-        configureDataProcessInstanceResolvers(builder);
-        configureVersionedDatasetResolvers(builder);
-        configureAccessAccessTokenMetadataResolvers(builder);
-        configureTestResultResolvers(builder);
-        configureRoleResolvers(builder);
-        configureSchemaFieldResolvers(builder);
-        configureEntityPathResolvers(builder);
-        configureViewResolvers(builder);
-        configureQueryEntityResolvers(builder);
-        configureOwnershipTypeResolver(builder);
-        configurePluginResolvers(builder);
-        configureBusinessAttributeResolver(builder);
-        configureBusinessAttributeAssociationResolver(builder);
-    }
+  public void configureRuntimeWiring(final RuntimeWiring.Builder builder) {
+    configureQueryResolvers(builder);
+    configureMutationResolvers(builder);
+    configureGenericEntityResolvers(builder);
+    configureDatasetResolvers(builder);
+    configureCorpUserResolvers(builder);
+    configureCorpGroupResolvers(builder);
+    configureDashboardResolvers(builder);
+    configureNotebookResolvers(builder);
+    configureChartResolvers(builder);
+    configureTypeResolvers(builder);
+    configureTypeExtensions(builder);
+    configureTagAssociationResolver(builder);
+    configureGlossaryTermAssociationResolver(builder);
+    configureDataJobResolvers(builder);
+    configureDataFlowResolvers(builder);
+    configureMLFeatureTableResolvers(builder);
+    configureGlossaryRelationshipResolvers(builder);
+    configureIngestionSourceResolvers(builder);
+    configureAnalyticsResolvers(builder);
+    configureContainerResolvers(builder);
+    configureDataPlatformInstanceResolvers(builder);
+    configureGlossaryTermResolvers(builder);
+    configureOrganisationRoleResolvers(builder);
+    configureGlossaryNodeResolvers(builder);
+    configureDomainResolvers(builder);
+    configureDataProductResolvers(builder);
+    configureAssertionResolvers(builder);
+    configurePolicyResolvers(builder);
+    configureDataProcessInstanceResolvers(builder);
+    configureVersionedDatasetResolvers(builder);
+    configureAccessAccessTokenMetadataResolvers(builder);
+    configureTestResultResolvers(builder);
+    configureRoleResolvers(builder);
+    configureSchemaFieldResolvers(builder);
+    configureEntityPathResolvers(builder);
+    configureViewResolvers(builder);
+    configureQueryEntityResolvers(builder);
+    configureOwnershipTypeResolver(builder);
+    configurePluginResolvers(builder);
+    configureBusinessAttributeResolver(builder);
+    configureBusinessAttributeAssociationResolver(builder);
+  }
 
   private void configureOrganisationRoleResolvers(RuntimeWiring.Builder builder) {
     builder.type(
@@ -944,11 +943,11 @@ public class GmsGraphQLEngine {
                     "listDataProductAssets", new ListDataProductAssetsResolver(this.entityClient))
                 .dataFetcher(
                     "listOwnershipTypes", new ListOwnershipTypesResolver(this.entityClient))
-                .dataFetcher(
-                    "browseV2", new BrowseV2Resolver(this.entityClient, this.viewService))
+                .dataFetcher("browseV2", new BrowseV2Resolver(this.entityClient, this.viewService))
                 .dataFetcher("businessAttribute", getResolver(businessAttributeType))
-                .dataFetcher("listBusinessAttributes", new ListBusinessAttributesResolver(this.entityClient))
-    );
+                .dataFetcher(
+                    "listBusinessAttributes",
+                    new ListBusinessAttributesResolver(this.entityClient)));
   }
 
   private DataFetcher getEntitiesResolver() {
@@ -1159,12 +1158,23 @@ public class GmsGraphQLEngine {
                 .dataFetcher(
                     "deleteOwnershipType",
                     new DeleteOwnershipTypeResolver(this.ownershipTypeService))
-                .dataFetcher("createBusinessAttribute", new CreateBusinessAttributeResolver(this.entityClient, this.entityService, this.businessAttributeService))
-                .dataFetcher("updateBusinessAttribute", new UpdateBusinessAttributeResolver(this.entityClient, this.businessAttributeService))
-                .dataFetcher("deleteBusinessAttribute", new DeleteBusinessAttributeResolver(this.entityClient))
-                .dataFetcher("addBusinessAttribute", new AddBusinessAttributeResolver(this.entityClient, this.entityService))
-                .dataFetcher("removeBusinessAttribute", new RemoveBusinessAttributeResolver(this.entityClient, this.entityService))
-                    );
+                .dataFetcher(
+                    "createBusinessAttribute",
+                    new CreateBusinessAttributeResolver(
+                        this.entityClient, this.entityService, this.businessAttributeService))
+                .dataFetcher(
+                    "updateBusinessAttribute",
+                    new UpdateBusinessAttributeResolver(
+                        this.entityClient, this.businessAttributeService))
+                .dataFetcher(
+                    "deleteBusinessAttribute",
+                    new DeleteBusinessAttributeResolver(this.entityClient))
+                .dataFetcher(
+                    "addBusinessAttribute",
+                    new AddBusinessAttributeResolver(this.entityClient, this.entityService))
+                .dataFetcher(
+                    "removeBusinessAttribute",
+                    new RemoveBusinessAttributeResolver(this.entityClient, this.entityService)));
   }
 
   private void configureGenericEntityResolvers(final RuntimeWiring.Builder builder) {
@@ -2463,23 +2473,39 @@ public class GmsGraphQLEngine {
                         })));
   }
 
-    private void configureBusinessAttributeResolver(final RuntimeWiring.Builder builder) {
-        builder.type("BusinessAttribute", typeWiring -> typeWiring
-                        .dataFetcher("exists", new EntityExistsResolver(entityService))
-                        .dataFetcher("privileges", new EntityPrivilegesResolver(entityClient)))
-                .type("ListBusinessAttributesResult", typeWiring -> typeWiring
-                        .dataFetcher("businessAttributes", new LoadableTypeBatchResolver<>(
-                                businessAttributeType,
-                                (env) -> ((ListBusinessAttributesResult) env.getSource()).getBusinessAttributes().stream()
-                                        .map(BusinessAttribute::getUrn)
-                                        .collect(Collectors.toList())))
-                );
-    }
-    private void configureBusinessAttributeAssociationResolver(final RuntimeWiring.Builder builder) {
-        builder.type("BusinessAttributeAssociation", typeWiring -> typeWiring
-                .dataFetcher("businessAttribute",
-                        new LoadableTypeResolver<>(businessAttributeType,
-                                (env) -> ((BusinessAttributeAssociation) env.getSource()).getBusinessAttribute().getUrn()))
-        );
-    }
+  private void configureBusinessAttributeResolver(final RuntimeWiring.Builder builder) {
+    builder
+        .type(
+            "BusinessAttribute",
+            typeWiring ->
+                typeWiring
+                    .dataFetcher("exists", new EntityExistsResolver(entityService))
+                    .dataFetcher("privileges", new EntityPrivilegesResolver(entityClient)))
+        .type(
+            "ListBusinessAttributesResult",
+            typeWiring ->
+                typeWiring.dataFetcher(
+                    "businessAttributes",
+                    new LoadableTypeBatchResolver<>(
+                        businessAttributeType,
+                        (env) ->
+                            ((ListBusinessAttributesResult) env.getSource())
+                                .getBusinessAttributes().stream()
+                                    .map(BusinessAttribute::getUrn)
+                                    .collect(Collectors.toList()))));
+  }
+
+  private void configureBusinessAttributeAssociationResolver(final RuntimeWiring.Builder builder) {
+    builder.type(
+        "BusinessAttributeAssociation",
+        typeWiring ->
+            typeWiring.dataFetcher(
+                "businessAttribute",
+                new LoadableTypeResolver<>(
+                    businessAttributeType,
+                    (env) ->
+                        ((BusinessAttributeAssociation) env.getSource())
+                            .getBusinessAttribute()
+                            .getUrn())));
+  }
 }

@@ -1052,7 +1052,9 @@ public class RestliEntityClient extends BaseClient implements EntityClient {
 
   // TODO : Implement RecordAspect Return OR Change Overall to VersionedAspect
   @Override
-  public RecordTemplate getLatestAspect(@Nonnull String urn, @Nonnull String aspect, @Nonnull Authentication authentication) throws RemoteInvocationException {
+  public RecordTemplate getLatestAspect(
+      @Nonnull String urn, @Nonnull String aspect, @Nonnull Authentication authentication)
+      throws RemoteInvocationException {
     return null;
   }
 

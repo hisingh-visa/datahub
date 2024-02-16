@@ -106,7 +106,7 @@ public class SearchRequestHandler {
   private SearchRequestHandler(
       @Nonnull EntitySpec entitySpec,
       @Nonnull EntityRegistry entityRegistry,
-                               @Nonnull SearchConfiguration configs,
+      @Nonnull SearchConfiguration configs,
       @Nullable CustomSearchConfiguration customSearchConfiguration) {
     this(ImmutableList.of(entitySpec), entityRegistry, configs, customSearchConfiguration);
   }
@@ -114,7 +114,7 @@ public class SearchRequestHandler {
   private SearchRequestHandler(
       @Nonnull List<EntitySpec> entitySpecs,
       @Nonnull EntityRegistry entityRegistry,
-                               @Nonnull SearchConfiguration configs,
+      @Nonnull SearchConfiguration configs,
       @Nullable CustomSearchConfiguration customSearchConfiguration) {
     _entitySpecs = entitySpecs;
     List<SearchableAnnotation> annotations = getSearchableAnnotations();
@@ -135,22 +135,25 @@ public class SearchRequestHandler {
   public static SearchRequestHandler getBuilder(
       @Nonnull EntitySpec entitySpec,
       @Nonnull EntityRegistry entityRegistry,
-                                                @Nonnull SearchConfiguration configs,
+      @Nonnull SearchConfiguration configs,
       @Nullable CustomSearchConfiguration customSearchConfiguration) {
     return REQUEST_HANDLER_BY_ENTITY_NAME.computeIfAbsent(
         ImmutableList.of(entitySpec),
-        k -> new SearchRequestHandler(entitySpec, entityRegistry,
-                    configs, customSearchConfiguration));
+        k ->
+            new SearchRequestHandler(
+                entitySpec, entityRegistry, configs, customSearchConfiguration));
   }
 
   public static SearchRequestHandler getBuilder(
       @Nonnull List<EntitySpec> entitySpecs,
       @Nonnull EntityRegistry entityRegistry,
-                                                @Nonnull SearchConfiguration configs,
+      @Nonnull SearchConfiguration configs,
       @Nullable CustomSearchConfiguration customSearchConfiguration) {
     return REQUEST_HANDLER_BY_ENTITY_NAME.computeIfAbsent(
-            ImmutableList.copyOf(entitySpecs),
-            k -> new SearchRequestHandler(entitySpecs, entityRegistry, configs, customSearchConfiguration));
+        ImmutableList.copyOf(entitySpecs),
+        k ->
+            new SearchRequestHandler(
+                entitySpecs, entityRegistry, configs, customSearchConfiguration));
   }
 
   private List<SearchableAnnotation> getSearchableAnnotations() {

@@ -103,6 +103,7 @@ public class DefaultEntitySpec implements EntitySpec {
 
     return _searchableFieldSpecs;
   }
+
   @Override
   public List<SearchableRefFieldSpec> getSearchableRefFieldSpecs() {
     if (_searchableRefFieldSpecs == null) {
@@ -110,5 +111,4 @@ public class DefaultEntitySpec implements EntitySpec {
     }
     return _searchableRefFieldSpecs;
   }
-
 }

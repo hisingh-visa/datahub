@@ -22,6 +22,7 @@ import com.linkedin.metadata.models.SearchableFieldSpec;
 import com.linkedin.metadata.models.SearchableRefFieldSpec;
 import com.linkedin.metadata.models.annotation.SearchScoreAnnotation;
 import com.linkedin.metadata.models.annotation.SearchableAnnotation;
+import com.linkedin.metadata.models.registry.EntityRegistry;
 import com.linkedin.metadata.search.utils.ESUtils;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,9 +38,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
-import com.linkedin.metadata.models.registry.EntityRegistry;
-import com.linkedin.metadata.search.utils.ESUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.opensearch.common.lucene.search.function.CombineFunction;
 import org.opensearch.common.lucene.search.function.FieldValueFactorFunction;
@@ -101,12 +99,12 @@ public class SearchQueryBuilder {
     this.customizedQueryHandler = CustomizedQueryHandler.builder(customSearchConfiguration).build();
   }
 
-  public void setEntityRegistry(EntityRegistry entityRegistry){
+  public void setEntityRegistry(EntityRegistry entityRegistry) {
     this.entityRegistry = entityRegistry;
   }
+
   public QueryBuilder buildQuery(
-      @Nonnull List<EntitySpec> entitySpecs,
-                                 @Nonnull String query, boolean fulltext) {
+      @Nonnull List<EntitySpec> entitySpecs, @Nonnull String query, boolean fulltext) {
     QueryConfiguration customQueryConfig =
         customizedQueryHandler.lookupQueryConfig(query).orElse(null);
 
@@ -270,8 +268,8 @@ public class SearchQueryBuilder {
     List<SearchableRefFieldSpec> searchableRefFieldSpecs = entitySpec.getSearchableRefFieldSpecs();
     for (SearchableRefFieldSpec refFieldSpec : searchableRefFieldSpecs) {
       int depth = refFieldSpec.getSearchableRefAnnotation().getDepth();
-      Set<SearchFieldConfig> searchFieldConfig = SearchFieldConfig.detectSubFieldType(
-                                                                refFieldSpec , depth , entityRegistry);
+      Set<SearchFieldConfig> searchFieldConfig =
+          SearchFieldConfig.detectSubFieldType(refFieldSpec, depth, entityRegistry);
       fields.addAll(searchFieldConfig);
     }
     return fields;

@@ -179,6 +179,7 @@ public class GraphQLEngineFactory {
   @Autowired
   @Qualifier("businessAttributeService")
   private BusinessAttributeService _businessAttributeService;
+
   @Bean(name = "graphQLEngine")
   @Nonnull
   protected GraphQLEngine getInstance() {

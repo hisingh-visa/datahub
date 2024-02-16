@@ -22,10 +22,8 @@ import com.linkedin.metadata.entity.EntityUtils;
 import com.linkedin.mxe.MetadataChangeProposal;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
-
 import java.net.URISyntaxException;
 import java.util.concurrent.CompletableFuture;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,8 +40,8 @@ public class UpdateDeprecationResolver implements DataFetcher<CompletableFuture<
   private final EntityService
       _entityService; // TODO: Remove this when 'exists' added to EntityClient
 
-    @Override
-    public CompletableFuture<Boolean> get(DataFetchingEnvironment environment) throws Exception {
+  @Override
+  public CompletableFuture<Boolean> get(DataFetchingEnvironment environment) throws Exception {
 
     final QueryContext context = environment.getContext();
     final UpdateDeprecationInput input =
@@ -95,13 +93,13 @@ public class UpdateDeprecationResolver implements DataFetcher<CompletableFuture<
                 new ConjunctivePrivilegeGroup(
                     ImmutableList.of(PoliciesConfig.EDIT_ENTITY_DEPRECATION_PRIVILEGE.getType()))));
 
-        return AuthorizationUtils.isAuthorized(
-                context.getAuthorizer(),
-                context.getActorUrn(),
-                entityUrn.getEntityType(),
-                entityUrn.toString(),
-                orPrivilegeGroups);
-    }
+    return AuthorizationUtils.isAuthorized(
+        context.getAuthorizer(),
+        context.getActorUrn(),
+        entityUrn.getEntityType(),
+        entityUrn.toString(),
+        orPrivilegeGroups);
+  }
 
   public static Boolean validateUpdateDeprecationInput(Urn entityUrn, EntityService entityService) {
 
@@ -111,8 +109,8 @@ public class UpdateDeprecationResolver implements DataFetcher<CompletableFuture<
               "Failed to update deprecation for Entity %s. Entity does not exist.", entityUrn));
     }
 
-        return true;
-    }
+    return true;
+  }
 
   private static void updateDeprecation(
       Deprecation deprecation, UpdateDeprecationInput input, QueryContext context) {

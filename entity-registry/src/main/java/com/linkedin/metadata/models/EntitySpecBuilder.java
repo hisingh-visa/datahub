@@ -12,15 +12,14 @@ import com.linkedin.data.schema.annotation.PegasusSchemaAnnotationHandlerImpl;
 import com.linkedin.data.schema.annotation.SchemaAnnotationHandler;
 import com.linkedin.data.schema.annotation.SchemaAnnotationProcessor;
 import com.linkedin.data.template.RecordTemplate;
-import com.linkedin.metadata.models.annotation.EntityAnnotation;
 import com.linkedin.metadata.models.annotation.AspectAnnotation;
+import com.linkedin.metadata.models.annotation.EntityAnnotation;
+import com.linkedin.metadata.models.annotation.RelationshipAnnotation;
 import com.linkedin.metadata.models.annotation.SearchScoreAnnotation;
 import com.linkedin.metadata.models.annotation.SearchableAnnotation;
 import com.linkedin.metadata.models.annotation.SearchableRefAnnotation;
-import com.linkedin.metadata.models.annotation.RelationshipAnnotation;
 import com.linkedin.metadata.models.annotation.TimeseriesFieldAnnotation;
 import com.linkedin.metadata.models.annotation.TimeseriesFieldCollectionAnnotation;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -43,7 +42,7 @@ public class EntitySpecBuilder {
       new PegasusSchemaAnnotationHandlerImpl(SearchScoreAnnotation.ANNOTATION_NAME);
 
   public static SchemaAnnotationHandler _searchRefScoreHandler =
-          new PegasusSchemaAnnotationHandlerImpl(SearchableRefAnnotation.ANNOTATION_NAME);
+      new PegasusSchemaAnnotationHandlerImpl(SearchableRefAnnotation.ANNOTATION_NAME);
   public static SchemaAnnotationHandler _relationshipHandler =
       new PegasusSchemaAnnotationHandlerImpl(RelationshipAnnotation.ANNOTATION_NAME);
   public static SchemaAnnotationHandler _timeseriesFiledAnnotationHandler =
@@ -220,8 +219,15 @@ public class EntitySpecBuilder {
 
       if (AnnotationExtractionMode.IGNORE_ASPECT_FIELDS.equals(_extractionMode)) {
         // Short Circuit.
-        return new AspectSpec(aspectAnnotation, Collections.emptyList(), Collections.emptyList(),
-            Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), aspectRecordSchema,
+        return new AspectSpec(
+            aspectAnnotation,
+            Collections.emptyList(),
+            Collections.emptyList(),
+            Collections.emptyList(),
+            Collections.emptyList(),
+            Collections.emptyList(),
+            Collections.emptyList(),
+            aspectRecordSchema,
             aspectClass);
       }
 
@@ -252,12 +258,15 @@ public class EntitySpecBuilder {
       searcScoreFieldSpecTraverser.traverse(processedSearchScoreResult.getResultSchema());
 
       final SchemaAnnotationProcessor.SchemaAnnotationProcessResult processedSearchRefResult =
-              SchemaAnnotationProcessor.process(Collections.singletonList(_searchRefScoreHandler), aspectRecordSchema,
-                      new SchemaAnnotationProcessor.AnnotationProcessOption());
+          SchemaAnnotationProcessor.process(
+              Collections.singletonList(_searchRefScoreHandler),
+              aspectRecordSchema,
+              new SchemaAnnotationProcessor.AnnotationProcessOption());
 
-      final SearchableRefFieldSpecExtractor searchableRefFieldSpecExtractor = new SearchableRefFieldSpecExtractor();
+      final SearchableRefFieldSpecExtractor searchableRefFieldSpecExtractor =
+          new SearchableRefFieldSpecExtractor();
       final DataSchemaRichContextTraverser searchableRefFieldSpecTraverser =
-              new DataSchemaRichContextTraverser(searchableRefFieldSpecExtractor);
+          new DataSchemaRichContextTraverser(searchableRefFieldSpecExtractor);
       searchableRefFieldSpecTraverser.traverse(processedSearchRefResult.getResultSchema());
 
       final SchemaAnnotationProcessor.SchemaAnnotationProcessResult processedRelationshipResult =
@@ -296,7 +305,9 @@ public class EntitySpecBuilder {
           searchScoreFieldSpecExtractor.getSpecs(),
           relationshipFieldSpecExtractor.getSpecs(),
           timeseriesFieldSpecExtractor.getTimeseriesFieldSpecs(),
-          timeseriesFieldSpecExtractor.getTimeseriesFieldCollectionSpecs(), searchableRefFieldSpecExtractor.getSpecs(), aspectRecordSchema,
+          timeseriesFieldSpecExtractor.getTimeseriesFieldCollectionSpecs(),
+          searchableRefFieldSpecExtractor.getSpecs(),
+          aspectRecordSchema,
           aspectClass);
     }
 

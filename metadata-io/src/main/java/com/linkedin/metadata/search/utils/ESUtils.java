@@ -81,14 +81,25 @@ public class ESUtils {
   // to field level properties
   public static final Map<String, List<String>> FIELDS_TO_EXPANDED_FIELDS_LIST =
       new HashMap<String, List<String>>() {
-        {put("tags", ImmutableList.of("tags", "fieldTags", "editedFieldTags"));
-    put("glossaryTerms", ImmutableList.of("glossaryTerms", "fieldGlossaryTerms", "editedFieldGlossaryTerms"));
-    put("fieldTags", ImmutableList.of("fieldTags", "editedFieldTags"));
-    put("fieldGlossaryTerms", ImmutableList.of("fieldGlossaryTerms", "editedFieldGlossaryTerms"));
-    put("fieldDescriptions", ImmutableList.of("fieldDescriptions", "editedFieldDescriptions"));
-    put("description", ImmutableList.of("description", "editedDescription"));
-    put("businessAttribute", ImmutableList.of("editedFieldBusinessAttributeRef", "editedFieldBusinessAttributeRef.urn"));
-  }};
+        {
+          put("tags", ImmutableList.of("tags", "fieldTags", "editedFieldTags"));
+          put(
+              "glossaryTerms",
+              ImmutableList.of("glossaryTerms", "fieldGlossaryTerms", "editedFieldGlossaryTerms"));
+          put("fieldTags", ImmutableList.of("fieldTags", "editedFieldTags"));
+          put(
+              "fieldGlossaryTerms",
+              ImmutableList.of("fieldGlossaryTerms", "editedFieldGlossaryTerms"));
+          put(
+              "fieldDescriptions",
+              ImmutableList.of("fieldDescriptions", "editedFieldDescriptions"));
+          put("description", ImmutableList.of("description", "editedDescription"));
+          put(
+              "businessAttribute",
+              ImmutableList.of(
+                  "editedFieldBusinessAttributeRef", "editedFieldBusinessAttributeRef.urn"));
+        }
+      };
 
   public static final Set<String> BOOLEAN_FIELDS = ImmutableSet.of("removed");
 

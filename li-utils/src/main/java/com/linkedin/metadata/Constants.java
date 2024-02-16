@@ -1,9 +1,9 @@
 package com.linkedin.metadata;
 
 import com.linkedin.common.urn.Urn;
-
 import java.util.Arrays;
 import java.util.List;
+
 /** Static class containing commonly-used constants across DataHub services. */
 public class Constants {
   public static final String INTERNAL_DELEGATED_FOR_ACTOR_HEADER_NAME = "X-DataHub-Delegated-For";
@@ -315,14 +315,12 @@ public class Constants {
 
   public static final String CHANGE_EVENT_PLATFORM_EVENT_NAME = "entityChangeEvent";
 
-  //Business Attribute
+  // Business Attribute
   public static final String BUSINESS_ATTRIBUTE_KEY_ASPECT_NAME = "businessAttributeKey";
   public static final String BUSINESS_ATTRIBUTE_INFO_ASPECT_NAME = "businessAttributeInfo";
   public static final String BUSINESS_ATTRIBUTE_ASSOCIATION = "businessAttributeAssociation";
 
-  /**
-   * Retention
-   */
+  /** Retention */
   public static final String DATAHUB_RETENTION_ENTITY = "dataHubRetention";
 
   public static final String DATAHUB_RETENTION_ASPECT = "dataHubRetentionConfig";
@@ -375,7 +373,8 @@ public class Constants {
   // DAO
   public static final long LATEST_VERSION = 0;
 
-  public static final List<String> SKIP_REFERENCE_ASPECT = Arrays.asList("ownership", "status", "institutionalMemory");
-  private Constants() {
-  }
+  public static final List<String> SKIP_REFERENCE_ASPECT =
+      Arrays.asList("ownership", "status", "institutionalMemory");
+
+  private Constants() {}
 }

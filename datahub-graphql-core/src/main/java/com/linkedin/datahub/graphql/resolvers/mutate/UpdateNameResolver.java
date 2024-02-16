@@ -38,8 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class UpdateNameResolver implements DataFetcher<CompletableFuture<Boolean>> {
 
-    private final EntityService _entityService;
-    private final EntityClient _entityClient;
+  private final EntityService _entityService;
+  private final EntityClient _entityClient;
 
   @Override
   public CompletableFuture<Boolean> get(DataFetchingEnvironment environment) throws Exception {
@@ -55,25 +55,26 @@ public class UpdateNameResolver implements DataFetcher<CompletableFuture<Boolean
                 String.format("Failed to update %s. %s does not exist.", targetUrn, targetUrn));
           }
 
-            switch (targetUrn.getEntityType()) {
-                case Constants.GLOSSARY_TERM_ENTITY_NAME:
-                    return updateGlossaryTermName(targetUrn, input, environment.getContext());
-                case Constants.GLOSSARY_NODE_ENTITY_NAME:
-                    return updateGlossaryNodeName(targetUrn, input, environment.getContext());
-                case Constants.DOMAIN_ENTITY_NAME:
-                    return updateDomainName(targetUrn, input, environment.getContext());
-                case Constants.CORP_GROUP_ENTITY_NAME:
-                    return updateGroupName(targetUrn, input, environment.getContext());
-                case Constants.DATA_PRODUCT_ENTITY_NAME:
-                    return updateDataProductName(targetUrn, input, environment.getContext());
-                case Constants.BUSINESS_ATTRIBUTE_ENTITY_NAME:
-                    return updateBusinessAttributeName(targetUrn, input, environment.getContext());
-                default:
-                    throw new RuntimeException(
-                            String.format("Failed to update name. Unsupported resource type %s provided.", targetUrn));
-            }
+          switch (targetUrn.getEntityType()) {
+            case Constants.GLOSSARY_TERM_ENTITY_NAME:
+              return updateGlossaryTermName(targetUrn, input, environment.getContext());
+            case Constants.GLOSSARY_NODE_ENTITY_NAME:
+              return updateGlossaryNodeName(targetUrn, input, environment.getContext());
+            case Constants.DOMAIN_ENTITY_NAME:
+              return updateDomainName(targetUrn, input, environment.getContext());
+            case Constants.CORP_GROUP_ENTITY_NAME:
+              return updateGroupName(targetUrn, input, environment.getContext());
+            case Constants.DATA_PRODUCT_ENTITY_NAME:
+              return updateDataProductName(targetUrn, input, environment.getContext());
+            case Constants.BUSINESS_ATTRIBUTE_ENTITY_NAME:
+              return updateBusinessAttributeName(targetUrn, input, environment.getContext());
+            default:
+              throw new RuntimeException(
+                  String.format(
+                      "Failed to update name. Unsupported resource type %s provided.", targetUrn));
+          }
         });
-    }
+  }
 
   private Boolean updateGlossaryTermName(
       Urn targetUrn, UpdateNameInput input, QueryContext context) {
@@ -154,9 +155,9 @@ public class UpdateNameResolver implements DataFetcher<CompletableFuture<Boolean
                     _entityService,
                     null);
 
-                if (domainProperties == null) {
-                    throw new IllegalArgumentException("Domain does not exist");
-                }
+        if (domainProperties == null) {
+          throw new IllegalArgumentException("Domain does not exist");
+        }
 
         if (DomainUtils.hasNameConflict(
             input.getName(),
@@ -269,41 +270,51 @@ public class UpdateNameResolver implements DataFetcher<CompletableFuture<Boolean
       return true;
     } catch (Exception e) {
       throw new RuntimeException(
-            String.format("Failed to perform update against input %s", input), e);
+          String.format("Failed to perform update against input %s", input), e);
     }
   }
 
   private Boolean updateBusinessAttributeName(
-          Urn targetUrn,
-          UpdateNameInput input,
-          QueryContext context
-  ) {
+      Urn targetUrn, UpdateNameInput input, QueryContext context) {
     if (!BusinessAttributeAuthorizationUtils.canManageBusinessAttribute(context)) {
-      throw new AuthorizationException("Unauthorized to perform this action. Please contact your DataHub administrator.");
+      throw new AuthorizationException(
+          "Unauthorized to perform this action. Please contact your DataHub administrator.");
     }
     try {
-      BusinessAttributeInfo businessAttributeInfo = (BusinessAttributeInfo) EntityUtils.getAspectFromEntity(
-              targetUrn.toString(), Constants.BUSINESS_ATTRIBUTE_INFO_ASPECT_NAME, _entityService, null);
+      BusinessAttributeInfo businessAttributeInfo =
+          (BusinessAttributeInfo)
+              EntityUtils.getAspectFromEntity(
+                  targetUrn.toString(),
+                  Constants.BUSINESS_ATTRIBUTE_INFO_ASPECT_NAME,
+                  _entityService,
+                  null);
       if (businessAttributeInfo == null) {
         throw new IllegalArgumentException("Business Attribute does not exist");
       }
 
       if (BusinessAttributeUtils.hasNameConflict(input.getName(), context, _entityClient)) {
         throw new DataHubGraphQLException(
-                String.format("\"%s\" already exists as Business Attribute. Please pick a unique name.", input.getName()),
-                DataHubGraphQLErrorCode.CONFLICT
-        );
+            String.format(
+                "\"%s\" already exists as Business Attribute. Please pick a unique name.",
+                input.getName()),
+            DataHubGraphQLErrorCode.CONFLICT);
       }
 
       businessAttributeInfo.setFieldPath(input.getName());
       businessAttributeInfo.setName(input.getName());
       Urn actor = CorpuserUrn.createFromString(context.getActorUrn());
-      persistAspect(targetUrn, Constants.BUSINESS_ATTRIBUTE_INFO_ASPECT_NAME, businessAttributeInfo, actor, _entityService);
+      persistAspect(
+          targetUrn,
+          Constants.BUSINESS_ATTRIBUTE_INFO_ASPECT_NAME,
+          businessAttributeInfo,
+          actor,
+          _entityService);
       return true;
     } catch (DataHubGraphQLException e) {
       throw e;
     } catch (Exception e) {
-      throw new RuntimeException(String.format("Failed to perform update against input %s", input), e);
+      throw new RuntimeException(
+          String.format("Failed to perform update against input %s", input), e);
     }
   }
 }

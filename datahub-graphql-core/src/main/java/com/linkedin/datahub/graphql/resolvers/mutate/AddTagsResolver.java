@@ -21,9 +21,6 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.linkedin.datahub.graphql.resolvers.ResolverUtils.*;
-
-
 @Slf4j
 @RequiredArgsConstructor
 public class AddTagsResolver implements DataFetcher<CompletableFuture<Boolean>> {

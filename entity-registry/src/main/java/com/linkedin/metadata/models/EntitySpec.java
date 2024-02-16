@@ -52,8 +52,8 @@ public interface EntitySpec {
 
   default List<SearchableRefFieldSpec> getSearchableRefFieldSpecs() {
     return getAspectSpecs().stream()
-            .map(AspectSpec::getSearchableRefFieldSpecs)
-            .flatMap(List::stream)
-            .collect(Collectors.toList());
+        .map(AspectSpec::getSearchableRefFieldSpecs)
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
   }
 }

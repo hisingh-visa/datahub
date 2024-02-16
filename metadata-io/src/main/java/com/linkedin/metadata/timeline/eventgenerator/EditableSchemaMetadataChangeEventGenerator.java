@@ -54,99 +54,110 @@ public class EditableSchemaMetadataChangeEventGenerator
         new EditableSchemaFieldInfoArray(editableSchemaFieldInfos));
   }
 
-    private static List<ChangeEvent> getAllChangeEvents(
+  private static List<ChangeEvent> getAllChangeEvents(
       EditableSchemaFieldInfo baseFieldInfo,
-                                                        EditableSchemaFieldInfo targetFieldInfo,
+      EditableSchemaFieldInfo targetFieldInfo,
       String entityUrn,
       ChangeCategory changeCategory,
-                                                        AuditStamp auditStamp) {
-        List<ChangeEvent> changeEvents = new ArrayList<>();
-        Urn datasetFieldUrn = getDatasetFieldUrn(baseFieldInfo, targetFieldInfo, entityUrn);
-        if (changeCategory == ChangeCategory.DOCUMENTATION) {
-            ChangeEvent documentationChangeEvent =
+      AuditStamp auditStamp) {
+    List<ChangeEvent> changeEvents = new ArrayList<>();
+    Urn datasetFieldUrn = getDatasetFieldUrn(baseFieldInfo, targetFieldInfo, entityUrn);
+    if (changeCategory == ChangeCategory.DOCUMENTATION) {
+      ChangeEvent documentationChangeEvent =
           getDocumentationChangeEvent(baseFieldInfo, targetFieldInfo, datasetFieldUrn, auditStamp);
-            if (documentationChangeEvent != null) {
-                changeEvents.add(documentationChangeEvent);
-            }
-        }
-        if (changeCategory == ChangeCategory.TAG) {
-            changeEvents.addAll(
+      if (documentationChangeEvent != null) {
+        changeEvents.add(documentationChangeEvent);
+      }
+    }
+    if (changeCategory == ChangeCategory.TAG) {
+      changeEvents.addAll(
           getTagChangeEvents(baseFieldInfo, targetFieldInfo, datasetFieldUrn, auditStamp));
-        }
-        if (changeCategory == ChangeCategory.GLOSSARY_TERM) {
-            changeEvents.addAll(
+    }
+    if (changeCategory == ChangeCategory.GLOSSARY_TERM) {
+      changeEvents.addAll(
           getGlossaryTermChangeEvents(baseFieldInfo, targetFieldInfo, datasetFieldUrn, auditStamp));
-        }
-        if (changeCategory == ChangeCategory.BUSINESS_ATTRIBUTE) {
-            changeEvents.addAll(getBusinessAttributeAssociationChangeEvents(baseFieldInfo, targetFieldInfo, datasetFieldUrn, auditStamp));
-        }
-
-        return changeEvents;
+    }
+    if (changeCategory == ChangeCategory.BUSINESS_ATTRIBUTE) {
+      changeEvents.addAll(
+          getBusinessAttributeAssociationChangeEvents(
+              baseFieldInfo, targetFieldInfo, datasetFieldUrn, auditStamp));
     }
 
-    private static List<ChangeEvent> computeDiffs(EditableSchemaMetadata baseEditableSchemaMetadata,
-                                                  EditableSchemaMetadata targetEditableSchemaMetadata,
-                                                  String entityUrn, ChangeCategory changeCategory, AuditStamp auditStamp) {
-        sortEditableSchemaMetadataByFieldPath(baseEditableSchemaMetadata);
-        sortEditableSchemaMetadataByFieldPath(targetEditableSchemaMetadata);
-        List<ChangeEvent> changeEvents = new ArrayList<>();
-        EditableSchemaFieldInfoArray baseFieldInfos =
-                (baseEditableSchemaMetadata != null) ? baseEditableSchemaMetadata.getEditableSchemaFieldInfo()
-                        : new EditableSchemaFieldInfoArray();
-        EditableSchemaFieldInfoArray targetFieldInfos = targetEditableSchemaMetadata.getEditableSchemaFieldInfo();
-        int baseIdx = 0;
-        int targetIdx = 0;
-        while (baseIdx < baseFieldInfos.size() && targetIdx < targetFieldInfos.size()) {
-            EditableSchemaFieldInfo baseFieldInfo = baseFieldInfos.get(baseIdx);
-            EditableSchemaFieldInfo targetFieldInfo = targetFieldInfos.get(targetIdx);
-            int comparison = baseFieldInfo.getFieldPath().compareTo(targetFieldInfo.getFieldPath());
-            if (comparison == 0) {
-                changeEvents.addAll(getAllChangeEvents(baseFieldInfo, targetFieldInfo, entityUrn, changeCategory, auditStamp));
-                ++baseIdx;
-                ++targetIdx;
-            } else if (comparison < 0) {
-                // EditableFieldInfo got removed.
-                changeEvents.addAll(getAllChangeEvents(baseFieldInfo, null, entityUrn, changeCategory, auditStamp));
-                ++baseIdx;
-            } else {
-                // EditableFieldInfo got added.
-                changeEvents.addAll(getAllChangeEvents(null, targetFieldInfo, entityUrn, changeCategory, auditStamp));
-                ++targetIdx;
-            }
-        }
+    return changeEvents;
+  }
 
-        while (baseIdx < baseFieldInfos.size()) {
-            // Handle removed baseFieldInfo
-            EditableSchemaFieldInfo baseFieldInfo = baseFieldInfos.get(baseIdx);
-            changeEvents.addAll(
+  private static List<ChangeEvent> computeDiffs(
+      EditableSchemaMetadata baseEditableSchemaMetadata,
+      EditableSchemaMetadata targetEditableSchemaMetadata,
+      String entityUrn,
+      ChangeCategory changeCategory,
+      AuditStamp auditStamp) {
+    sortEditableSchemaMetadataByFieldPath(baseEditableSchemaMetadata);
+    sortEditableSchemaMetadataByFieldPath(targetEditableSchemaMetadata);
+    List<ChangeEvent> changeEvents = new ArrayList<>();
+    EditableSchemaFieldInfoArray baseFieldInfos =
+        (baseEditableSchemaMetadata != null)
+            ? baseEditableSchemaMetadata.getEditableSchemaFieldInfo()
+            : new EditableSchemaFieldInfoArray();
+    EditableSchemaFieldInfoArray targetFieldInfos =
+        targetEditableSchemaMetadata.getEditableSchemaFieldInfo();
+    int baseIdx = 0;
+    int targetIdx = 0;
+    while (baseIdx < baseFieldInfos.size() && targetIdx < targetFieldInfos.size()) {
+      EditableSchemaFieldInfo baseFieldInfo = baseFieldInfos.get(baseIdx);
+      EditableSchemaFieldInfo targetFieldInfo = targetFieldInfos.get(targetIdx);
+      int comparison = baseFieldInfo.getFieldPath().compareTo(targetFieldInfo.getFieldPath());
+      if (comparison == 0) {
+        changeEvents.addAll(
+            getAllChangeEvents(
+                baseFieldInfo, targetFieldInfo, entityUrn, changeCategory, auditStamp));
+        ++baseIdx;
+        ++targetIdx;
+      } else if (comparison < 0) {
+        // EditableFieldInfo got removed.
+        changeEvents.addAll(
+            getAllChangeEvents(baseFieldInfo, null, entityUrn, changeCategory, auditStamp));
+        ++baseIdx;
+      } else {
+        // EditableFieldInfo got added.
+        changeEvents.addAll(
+            getAllChangeEvents(null, targetFieldInfo, entityUrn, changeCategory, auditStamp));
+        ++targetIdx;
+      }
+    }
+
+    while (baseIdx < baseFieldInfos.size()) {
+      // Handle removed baseFieldInfo
+      EditableSchemaFieldInfo baseFieldInfo = baseFieldInfos.get(baseIdx);
+      changeEvents.addAll(
           getAllChangeEvents(baseFieldInfo, null, entityUrn, changeCategory, auditStamp));
-            ++baseIdx;
-        }
-        while (targetIdx < targetFieldInfos.size()) {
-            // Handle newly added targetFieldInfo
-            EditableSchemaFieldInfo targetFieldInfo = targetFieldInfos.get(targetIdx);
-            changeEvents.addAll(
+      ++baseIdx;
+    }
+    while (targetIdx < targetFieldInfos.size()) {
+      // Handle newly added targetFieldInfo
+      EditableSchemaFieldInfo targetFieldInfo = targetFieldInfos.get(targetIdx);
+      changeEvents.addAll(
           getAllChangeEvents(null, targetFieldInfo, entityUrn, changeCategory, auditStamp));
-            ++targetIdx;
-        }
-        return changeEvents;
+      ++targetIdx;
     }
+    return changeEvents;
+  }
 
-    private static EditableSchemaMetadata getEditableSchemaMetadataFromAspect(
+  private static EditableSchemaMetadata getEditableSchemaMetadataFromAspect(
       EntityAspect entityAspect) {
-        if (entityAspect != null && entityAspect.getMetadata() != null) {
-            return RecordUtils.toRecordTemplate(EditableSchemaMetadata.class, entityAspect.getMetadata());
-        }
-        return null;
+    if (entityAspect != null && entityAspect.getMetadata() != null) {
+      return RecordUtils.toRecordTemplate(EditableSchemaMetadata.class, entityAspect.getMetadata());
     }
+    return null;
+  }
 
-    private static ChangeEvent getDocumentationChangeEvent(
+  private static ChangeEvent getDocumentationChangeEvent(
       EditableSchemaFieldInfo baseFieldInfo,
-                                                           EditableSchemaFieldInfo targetFieldInfo,
+      EditableSchemaFieldInfo targetFieldInfo,
       Urn datasetFieldUrn,
       AuditStamp auditStamp) {
-        String baseFieldDescription = (baseFieldInfo != null) ? baseFieldInfo.getDescription() : null;
-        String targetFieldDescription =
+    String baseFieldDescription = (baseFieldInfo != null) ? baseFieldInfo.getDescription() : null;
+    String targetFieldDescription =
         (targetFieldInfo != null) ? targetFieldInfo.getDescription() : null;
 
     if (baseFieldDescription == null && targetFieldDescription != null) {
@@ -256,26 +267,33 @@ public class EditableSchemaMetadataChangeEventGenerator
     return Collections.emptyList();
   }
 
-    private static List<ChangeEvent> getBusinessAttributeAssociationChangeEvents(EditableSchemaFieldInfo baseFieldInfo,
-                                                                                 EditableSchemaFieldInfo targetFieldInfo,
-                                                                                 Urn datasetFieldUrn, AuditStamp auditStamp) {
-        BusinessAttributeAssociation baseBusinessAttributeAssociation = (baseFieldInfo != null) ? baseFieldInfo.getBusinessAttribute() : null;
-        BusinessAttributeAssociation targetBusinessAttributeAssociation = (targetFieldInfo != null) ? targetFieldInfo.getBusinessAttribute() : null;
+  private static List<ChangeEvent> getBusinessAttributeAssociationChangeEvents(
+      EditableSchemaFieldInfo baseFieldInfo,
+      EditableSchemaFieldInfo targetFieldInfo,
+      Urn datasetFieldUrn,
+      AuditStamp auditStamp) {
+    BusinessAttributeAssociation baseBusinessAttributeAssociation =
+        (baseFieldInfo != null) ? baseFieldInfo.getBusinessAttribute() : null;
+    BusinessAttributeAssociation targetBusinessAttributeAssociation =
+        (targetFieldInfo != null) ? targetFieldInfo.getBusinessAttribute() : null;
 
-        // 1. Get EntityBusinessAttributeAssociationChangeEvent, then rebind into a SchemaFieldBusinessAttributeAssociationChangeEvent.
-        List<ChangeEvent> entityBusinessAttributeAssociationChangeEvents =
-                BusinessAttributeAssociationChangeEventGenerator.computeDiffs(baseBusinessAttributeAssociation,
-                        targetBusinessAttributeAssociation, datasetFieldUrn.toString(),
-                        auditStamp);
+    // 1. Get EntityBusinessAttributeAssociationChangeEvent, then rebind into a
+    // SchemaFieldBusinessAttributeAssociationChangeEvent.
+    List<ChangeEvent> entityBusinessAttributeAssociationChangeEvents =
+        BusinessAttributeAssociationChangeEventGenerator.computeDiffs(
+            baseBusinessAttributeAssociation,
+            targetBusinessAttributeAssociation,
+            datasetFieldUrn.toString(),
+            auditStamp);
 
-        return entityBusinessAttributeAssociationChangeEvents;
-    }
+    return entityBusinessAttributeAssociationChangeEvents;
+  }
 
-    @Override
-    public ChangeTransaction getSemanticDiff(
+  @Override
+  public ChangeTransaction getSemanticDiff(
       EntityAspect previousValue,
       EntityAspect currentValue,
-                                             ChangeCategory element,
+      ChangeCategory element,
       JsonPatch rawDiff,
       boolean rawDiffsRequested) {
 
